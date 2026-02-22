@@ -39,7 +39,7 @@ export const productCatalogHandler = async (event, context) => {
 
   try {
     const result = await runQuery(`
-      SELECT id, name, description, price_credit, image, era
+      SELECT id, name, description, price_credit, image_url, era
       FROM products
       WHERE image IS NOT NULL
       ORDER BY id;

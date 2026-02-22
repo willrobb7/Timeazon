@@ -231,6 +231,16 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
 
+    const productCatalogLambda = new nodejs.NodejsFunction(this, 'product-catalog-lambda', {
+      functionName: `${props.subDomain}-product-catalog-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/utility-functions.js',
+      handler: 'productCatalogHandler',
+      bundling,
+      environment: {
+        ...lambdaEnvVars,
+      }
+    })
     // Grant Lambdas that need it access to the Aurora Data API
 
     // cluster.grantDataApiAccess(productCatalogLambda)
@@ -274,7 +284,7 @@ export class CdkStack extends Stack {
     healthchckApi.addMethod('GET', new apigw.LambdaIntegration(healthcheckLambda))
     
     const productsApi = api.root.addResource('products')
-    // productsApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
+    productsApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
     productsApi.addMethod('POST', new apigw.LambdaIntegration(postProductLambda))
 
     // ----------------------------------
@@ -420,7 +430,15 @@ export class CdkStack extends Stack {
       value: `https://${api.restApiId}.execute-api.${props.env.region}.amazonaws.com/api/healthcheck`
     })
 
+    new cdk.CfnOutput(this, "productCatalogLambda_ViaCloudFront", {
+      value: `https://${fullDomain}/api/products`
+    })
 
+    new cdk.CfnOutput(this, "productCatalolgLambda_DirectApiGateway", {
+      value: `https://${api.restApiId}.execute-api.${props.env.region}.amazonaws.com/api/products`
+    })
+
+    
     // --------------------------------------------------
     // 03 – CloudFront (Debugging + invalidations)
     // --------------------------------------------------

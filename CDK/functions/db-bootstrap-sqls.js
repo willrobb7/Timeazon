@@ -67,6 +67,12 @@ export const sql05_seedProducts = `
      'magnaCarta.png',
      'past'),
 
+     ('Temporal Stabiliser version 7.0',
+     'New Gadget',
+     9800,
+     'temporalStabiliser.jpg',
+     'future'),
+
   ON CONFLICT DO NOTHING;
 `;
 
