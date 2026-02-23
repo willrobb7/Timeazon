@@ -32,11 +32,12 @@
 //   }
 // };
 
-const normaliseEmail = (email) => String(email || "").trim().toLowerCase();
-const normaliseProductId = (productId) => String(productId || "").trim();
-// POST /api/favourites
+// const normaliseEmail = (email) => String(email || "").trim().toLowerCase();
+// const normaliseProductId = (productId) => String(productId || "").trim();
+
+// POST /api/addToCart
 // Body: { email, productId }
-// Adds a favourite (idempotent: calling again just overwrites same item)
+// Adds to cart (idempotent: calling again just overwrites same item)
 export const postToCartHandler = async (event) => {
   console.log("event:", JSON.stringify(event));
   console.log("body:", event.body);
@@ -66,7 +67,7 @@ export const postToCartHandler = async (event) => {
     );
 
     return jsonResponse(201, {
-      status: "favourited",
+      status: "added to cart",
       favourite: item
     });
   } catch (err) {
@@ -75,7 +76,7 @@ export const postToCartHandler = async (event) => {
   }
 };
 
-// GET /api/favourites?email=...
+// GET /api/addToCart?email=...
 // Returns all products in cart for a user using Query on the partition key
 export const getToCartHandler = async (event) => {
   console.log("event:", JSON.stringify(event));
