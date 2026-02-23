@@ -275,6 +275,34 @@ export class CdkStack extends Stack {
         // Grant Lambdas that need it access to the Aurora Data API
 
 // ADD TO CART LAMBDA 
+    // FAVOURITES
+    const postToCartLambda = new nodejs.NodejsFunction(this, "post-tocart-lambda", {
+      functionName: `${props.subDomain}-post-tocart-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: "functions/addToCart.js",
+      handler: "postToCartHandler",
+      bundling,
+      environment: lambdaEnvVars
+    });
+
+    const getToCartLambda = new nodejs.NodejsFunction(this, "get-tocart-lambda", {
+      functionName: `${props.subDomain}-get-tocart-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: "functions/addToCart.js",
+      handler: "getToCartHandler",
+      bundling,
+      environment: lambdaEnvVars
+    });
+
+    const deleteFromCartLambda = new nodejs.NodejsFunction(this, "delete-fromcart-lambda", {
+      functionName: `${props.subDomain}-delete-fromcart-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: "functions/addToCart.js",
+      handler: "deleteFromCartHandler",
+      bundling,
+      environment: lambdaEnvVars
+    });
+
     // ----------------------------------
     // API Gateway
     // ----------------------------------
@@ -315,6 +343,10 @@ export class CdkStack extends Stack {
     const productCatalogApi = api.root.addResource('product')
     productCatalogApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
 
+    const addToCartApi = api.root.addResource("addtocart");
+    addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
+    addToCartApi.addMethod("POST", new apigw.LambdaIntegration(postToCartLambda));
+    addToCartApi.addMethod("DELETE", new apigw.LambdaIntegration(deleteFromCartLambda));
     // ----------------------------------
     // CloudFront distributions
     // ----------------------------------
