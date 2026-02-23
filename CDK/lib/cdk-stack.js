@@ -276,7 +276,7 @@ export class CdkStack extends Stack {
 
 // ADD TO CART LAMBDA 
     // FAVOURITES
-    const postToCartLambda = new nodejs.NodejsFunction(this, "post-tocart-lambda", {
+    const postToCartLambda = new lambda.Function(this, "post-tocart-lambda", {
       functionName: `${props.subDomain}-post-tocart-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "addToCart.js/postToCartHandler",
@@ -284,7 +284,7 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     });
 
-    const getToCartLambda = new nodejs.NodejsFunction(this, "get-tocart-lambda", {
+    const getToCartLambda = new lambda.Function(this, "get-tocart-lambda", {
       functionName: `${props.subDomain}-get-tocart-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "addToCart.js/getToCartHandler",
@@ -292,7 +292,7 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     });
 
-    const deleteFromCartLambda = new nodejs.NodejsFunction(this, "delete-fromcart-lambda", {
+    const deleteFromCartLambda = new lambda.Function(this, "delete-fromcart-lambda", {
       functionName: `${props.subDomain}-delete-fromcart-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "addToCart.js/deleteFromCartHandler",
