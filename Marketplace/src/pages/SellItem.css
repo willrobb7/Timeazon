@@ -1,8 +1,20 @@
+.sellTitle {
+    font-size: 4rem;
+    color:aqua;
+    margin: 15% 0 0 5%;
+}
+
+.addItemForm {
+    
+    margin-top: 5vh;
+    align-items:end;
+}
+
 .sellItem {
 display: flex; 
 height: 100vh;
 background: radial-gradient(circle at 20% 30%, #112134, #0d0f1c 60%);
-position: relative;
+
 overflow: hidden;
 text-align:center;
 }
@@ -16,12 +28,13 @@ text-align:center;
   filter: blur(120px);
   z-index: 0;
   pointer-events: none;
-  align-items:center;
+  
 }
 
 .sellItem input {
-    position: relative;
+    
     text-align:center;
+    align-items:end;
     width: 60%;
     height: 40px;
     margin: 30px 0;
@@ -33,5 +46,16 @@ input:focus {
 }
 
 input::placeholder {
-    color: #f1f1f1;
+    color: #2800a1;
+}
+
+.eraInput {
+
+    left: 7.6vw;
+}
+
+.sellButton {
+    background-color:aqua;
+    margin: 2rem 5rem 3rem 3rem;
+    padding: 2% 3%;
 }
