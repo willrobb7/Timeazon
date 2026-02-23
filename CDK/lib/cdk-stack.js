@@ -195,11 +195,11 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambda bundling
     // ----------------------------------
-    const bundling = {
-      externalModules: ['aws-sdk'],
-      nodeModules: ['data-api-client'],
-      forceDockerBundling: true
-    }
+    // const bundling = {
+    //   externalModules: ['aws-sdk'],
+    //   nodeModules: ['data-api-client'],
+    //   forceDockerBundling: true
+    // }
 
     const lambdaEnvVars = {
       NODE_ENV: 'production',
@@ -215,42 +215,78 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambdas
     // ----------------------------------
-    const healthcheckLambda = new nodejs.NodejsFunction(this, 'health-check-lambda', {
+    // const healthcheckLambda = new nodejs.NodejsFunction(this, 'health-check-lambda', {
+    //   functionName: `${props.subDomain}-health-check-lambda`,
+    //   runtime: lambda.Runtime.NODEJS_22_X,
+    //   entry: 'functions/health-check.js',
+    //   handler: 'healthcheckHandler',
+    //   bundling
+
+    // })
+    // // Write your other lambdas into here
+
+    // // Colin has added some basic lambda's in here. Need to change the params to make them fit the 
+    // // requirements... (these are taken from the Bakehouse) 
+
+    // const productCatalogLambda = new nodejs.NodejsFunction(this, 'product-catalog-lambda', {
+    //       functionName: `${props.subDomain}-product-catalog-lambda`,
+    //       runtime: lambda.Runtime.NODEJS_22_X,
+    //       entry: 'functions/utility-functions.js',
+    //       handler: 'productCatalogHandler',
+    //       bundling,
+    //       environment: {
+    //         ...lambdaEnvVars,
+    //         FEATURED_PRODUCT: ""
+    //     }
+    //   })
+
+    // //SIGNUP LAMBDA
+
+    // const postUsersLambda = new nodejs.NodejsFunction(this, 'post-users-lambda', {
+    //   functionName: `${props.subDomain}-post-users-lambda`,
+    //   runtime: lambda.Runtime.NODEJS_22_X,
+    //   entry: 'functions/utility-functions.js',
+    //   handler: 'postUsersHandler',
+    //   bundling,
+    //   environment: lambdaEnvVars
+
+    // })
+
+
+
+    // WILL CHANGES 
+    // health check
+    const healthcheckLambda = new lambda.Function(this, 'health-check-lambda', {
       functionName: `${props.subDomain}-health-check-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: 'functions/health-check.js',
-      handler: 'healthcheckHandler',
-      bundling
-
+      handler: 'health-check.healthcheckHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: lambdaEnvVars
     })
-    // Write your other lambdas into here
 
-    // Colin has added some basic lambda's in here. Need to change the params to make them fit the 
-    // requirements... (these are taken from the Bakehouse) 
+    // product catalogue
+    const productCatalogLambda = new lambda.Function(this, 'product-catalog-lambda', {
+      functionName: `${props.subDomain}-product-catalog-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'utility-functions.productCatalogHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: {
+        ...lambdaEnvVars,
+        FEATURED_PRODUCT: ''
+      }
+    })
 
-    const productCatalogLambda = new nodejs.NodejsFunction(this, 'product-catalog-lambda', {
-          functionName: `${props.subDomain}-product-catalog-lambda`,
-          runtime: lambda.Runtime.NODEJS_22_X,
-          entry: 'functions/utility-functions.js',
-          handler: 'productCatalogHandler',
-          bundling,
-          environment: {
-            ...lambdaEnvVars,
-            FEATURED_PRODUCT: ""
-        }
-      })
-
-    //SIGNUP LAMBDA
-
-    const postUsersLambda = new nodejs.NodejsFunction(this, 'post-users-lambda', {
+    // sign up
+    const postUsersLambda = new lambda.Function(this, 'post-users-lambda', {
       functionName: `${props.subDomain}-post-users-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: 'functions/utility-functions.js',
-      handler: 'postUsersHandler',
-      bundling,
+      handler: 'utility-functions.postUsersHandler',
+      code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
-
     })
+
+
+
 
     // const productsListLambda = new nodejs.NodejsFunction(this, 'products-list-lambda', {
     //       functionName: `${props.subDomain}-products-list-lambda`,
