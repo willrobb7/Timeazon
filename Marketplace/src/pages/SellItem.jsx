@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./sellItem.css"
 
 export default function SellItem() {
   const [form, setForm] = useState({
@@ -57,7 +58,7 @@ export default function SellItem() {
     <div>
       <h2>Sell an Item</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form className="addItemForm" onSubmit={handleSubmit}>
         <input
           name="name"
           placeholder="Name"

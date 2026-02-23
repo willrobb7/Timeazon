@@ -13,7 +13,7 @@ export default function ProductCatalogue() {
     fetch("/api/products")
       .then(res => res.json())
       .then(data => {
-        setProducts(data.products || []);
+        setProducts(data.products);
         setLoading(false);
       })
       .catch(err => {
