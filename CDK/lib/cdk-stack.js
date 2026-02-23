@@ -215,44 +215,10 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambdas
     // ----------------------------------
-    // const healthcheckLambda = new nodejs.NodejsFunction(this, 'health-check-lambda', {
-    //   functionName: `${props.subDomain}-health-check-lambda`,
-    //   runtime: lambda.Runtime.NODEJS_22_X,
-    //   entry: 'functions/health-check.js',
-    //   handler: 'healthcheckHandler',
-    //   bundling
+    // Write your other lambdas into here
 
-    // })
-    // // Write your other lambdas into here
-
-    // // Colin has added some basic lambda's in here. Need to change the params to make them fit the 
-    // // requirements... (these are taken from the Bakehouse) 
-
-    // const productCatalogLambda = new nodejs.NodejsFunction(this, 'product-catalog-lambda', {
-    //       functionName: `${props.subDomain}-product-catalog-lambda`,
-    //       runtime: lambda.Runtime.NODEJS_22_X,
-    //       entry: 'functions/utility-functions.js',
-    //       handler: 'productCatalogHandler',
-    //       bundling,
-    //       environment: {
-    //         ...lambdaEnvVars,
-    //         FEATURED_PRODUCT: ""
-    //     }
-    //   })
-
-    // //SIGNUP LAMBDA
-
-    // const postUsersLambda = new nodejs.NodejsFunction(this, 'post-users-lambda', {
-    //   functionName: `${props.subDomain}-post-users-lambda`,
-    //   runtime: lambda.Runtime.NODEJS_22_X,
-    //   entry: 'functions/utility-functions.js',
-    //   handler: 'postUsersHandler',
-    //   bundling,
-    //   environment: lambdaEnvVars
-
-    // })
-
-
+    // Colin has added some basic lambda's in here. Need to change the params to make them fit the 
+    // requirements... (these are taken from the Bakehouse) 
 
     // WILL CHANGES 
     // health check
@@ -284,9 +250,6 @@ export class CdkStack extends Stack {
       code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
     })
-
-
-
 
     // const productsListLambda = new nodejs.NodejsFunction(this, 'products-list-lambda', {
     //       functionName: `${props.subDomain}-products-list-lambda`,
@@ -322,34 +285,33 @@ export class CdkStack extends Stack {
 
         // Grant Lambdas that need it access to the Aurora Data API
 
-// ADD TO CART LAMBDA 
-    // FAVOURITES
-    const postToCartLambda = new nodejs.NodejsFunction(this, "post-tocart-lambda", {
-      functionName: `${props.subDomain}-post-tocart-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: "functions/addToCart.js",
-      handler: "postToCartHandler",
-      bundling,
-      environment: lambdaEnvVars
-    });
+//ADD TO CART LAMBDA 
+    // const postToCartLambda = new nodejs.NodejsFunction(this, "post-tocart-lambda", {
+    //   functionName: `${props.subDomain}-post-tocart-lambda`,
+    //   runtime: lambda.Runtime.NODEJS_22_X,
+    //   entry: "functions/addToCart.js",
+    //   handler: "postToCartHandler",
+    //   bundling,
+    //   environment: lambdaEnvVars
+    // });
 
-    const getToCartLambda = new nodejs.NodejsFunction(this, "get-tocart-lambda", {
-      functionName: `${props.subDomain}-get-tocart-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: "functions/addToCart.js",
-      handler: "getToCartHandler",
-      bundling,
-      environment: lambdaEnvVars
-    });
+    // const getToCartLambda = new nodejs.NodejsFunction(this, "get-tocart-lambda", {
+    //   functionName: `${props.subDomain}-get-tocart-lambda`,
+    //   runtime: lambda.Runtime.NODEJS_22_X,
+    //   entry: "functions/addToCart.js",
+    //   handler: "getToCartHandler",
+    //   bundling,
+    //   environment: lambdaEnvVars
+    // });
 
-    const deleteFromCartLambda = new nodejs.NodejsFunction(this, "delete-fromcart-lambda", {
-      functionName: `${props.subDomain}-delete-fromcart-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: "functions/addToCart.js",
-      handler: "deleteFromCartHandler",
-      bundling,
-      environment: lambdaEnvVars
-    });
+    // const deleteFromCartLambda = new nodejs.NodejsFunction(this, "delete-fromcart-lambda", {
+    //   functionName: `${props.subDomain}-delete-fromcart-lambda`,
+    //   runtime: lambda.Runtime.NODEJS_22_X,
+    //   entry: "functions/addToCart.js",
+    //   handler: "deleteFromCartHandler",
+    //   bundling,
+    //   environment: lambdaEnvVars
+    // });
 
     // ----------------------------------
     // API Gateway
@@ -391,10 +353,10 @@ export class CdkStack extends Stack {
     const productCatalogApi = api.root.addResource('product')
     productCatalogApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
 
-    const addToCartApi = api.root.addResource("addtocart");
-    addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
-    addToCartApi.addMethod("POST", new apigw.LambdaIntegration(postToCartLambda));
-    addToCartApi.addMethod("DELETE", new apigw.LambdaIntegration(deleteFromCartLambda));
+    // const addToCartApi = api.root.addResource("addtocart");
+    // addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
+    // addToCartApi.addMethod("POST", new apigw.LambdaIntegration(postToCartLambda));
+    // addToCartApi.addMethod("DELETE", new apigw.LambdaIntegration(deleteFromCartLambda));
     // ----------------------------------
     // CloudFront distributions
     // ----------------------------------
