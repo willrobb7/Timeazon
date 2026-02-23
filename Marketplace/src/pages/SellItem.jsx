@@ -55,7 +55,7 @@ export default function SellItem() {
   };
 
   return (
-    <div>
+    <div class="sellItem">
       <h2>Sell an Item</h2>
 
       <form className="addItemForm" onSubmit={handleSubmit}>
