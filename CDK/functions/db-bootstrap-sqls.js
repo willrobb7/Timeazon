@@ -54,7 +54,7 @@ export const sql04_seedCustomers = `
 `;
 
 export const sql05_seedProducts = `
-  INSERT INTO products (name, description, price_credits, image_url, era) VALUES
+  INSERT INTO products (id, name, description, price_credits, image_url, era) VALUES
     ('Sword',
      'Old Sword',
      275,

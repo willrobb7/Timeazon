@@ -64,51 +64,51 @@ export class CdkStack extends Stack {
     // // Db configuration – Postgres engine and parameter group
 
     // // Choose the Aurora Postgres engine version
-    // const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
+    const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
 
-    // const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
-    //   version: postgresVersion,
-    // });
+    const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
+      version: postgresVersion,
+    });
 
-    // // Create a parameter group that forces SSL
-    // const postgresParameterGroup = new rds.ParameterGroup(
-    //   this,
-    //   'postgres-parameter-group',
-    //   {
-    //     name: `${props.subDomain}-ParameterGroup`,
-    //     engine: postgresEngine,
-    //     description: `${props.subDomain} parameter group with SSL enforced`,
-    //     removalPolicy: cdk.RemovalPolicy.DESTROY,
-    //     parameters: {
-    //       'rds.force_ssl': '1' // require SSL for database connections
-    //     }
-    //   }
-    // )
+    // Create a parameter group that forces SSL
+    const postgresParameterGroup = new rds.ParameterGroup(
+      this,
+      'postgres-parameter-group',
+      {
+        name: `${props.subDomain}-ParameterGroup`,
+        engine: postgresEngine,
+        description: `${props.subDomain} parameter group with SSL enforced`,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        parameters: {
+          'rds.force_ssl': '1' // require SSL for database connections
+        }
+      }
+    )
 
-    // const cluster = new rds.DatabaseCluster(this, 'rds-cluster', {
-    //   // Use the Postgres engine we defined above
-    //   engine: postgresEngine,
-    //   // Attach our parameter group so SSL is enforced
-    //   parameterGroup: postgresParameterGroup,
-    //   // Name of the default database in this cluster
-    //   defaultDatabaseName: props.dbName,
-    //   // Put the cluster into the shared CTA VPC
-    //   vpc: sharedVpc,
-    //   vpcSubnets: {
-    //     subnetType: ec2.SubnetType.PRIVATE_ISOLATED
-    //   },
+    const cluster = new rds.DatabaseCluster(this, 'rds-cluster', {
+      // Use the Postgres engine we defined above
+      engine: postgresEngine,
+      // Attach our parameter group so SSL is enforced
+      parameterGroup: postgresParameterGroup,
+      // Name of the default database in this cluster
+      defaultDatabaseName: props.dbName,
+      // Put the cluster into the shared CTA VPC
+      vpc: sharedVpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
+      },
     
-    //   // Aurora Serverless v2 configuration
-    //   writer: rds.ClusterInstance.serverlessV2('writer'),
-    //   serverlessV2MinCapacity: 0.5,
-    //   serverlessV2MaxCapacity: 1,
+      // Aurora Serverless v2 configuration
+      writer: rds.ClusterInstance.serverlessV2('writer'),
+      serverlessV2MinCapacity: 0.5,
+      serverlessV2MaxCapacity: 1,
     
-    //   // Needed for the Data API from our Lambdas
-    //   enableDataApi: true,
+      // Needed for the Data API from our Lambdas
+      enableDataApi: true,
     
-    //   // Tear the database down with the stack (fine for a lab, not for prod)
-    //   removalPolicy: cdk.RemovalPolicy.DESTROY
-    // })
+      // Tear the database down with the stack (fine for a lab, not for prod)
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    })
 
     // ----------------------------------
     // S3 buckets
@@ -200,13 +200,15 @@ export class CdkStack extends Stack {
       nodeModules: ['data-api-client']
     }
 
+
+
     const lambdaEnvVars = {
       NODE_ENV: 'production',
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       DB_NAME: props.dbName,
       // When we add in a DB you can uncomment these 
-      // CLUSTER_ARN: cluster.clusterArn,
-      // SECRET_ARN: cluster.secret?.secretArn || 'NOT_SET',
+      CLUSTER_ARN: cluster.clusterArn,
+      SECRET_ARN: cluster.secret?.secretArn || 'NOT_SET',
       STATIC_IMAGES_BUCKET: staticImagesBucket.bucketName,
       STATIC_IMAGES_BASE_URL: `https://${staticImagesInS3Domain}`
     }
@@ -214,6 +216,16 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambdas
     // ----------------------------------
+
+    const bootstrapLambda = new nodejs.NodejsFunction(this, 'bootstrap-lambda', {
+      functionName: `${props.subDomain}-bootstrap-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/utility-functions.js',
+      handler: 'bootstrapHandler',
+      bundling,
+      environment: lambdaEnvVars
+    })
+    
     const healthcheckLambda = new nodejs.NodejsFunction(this, 'health-check-lambda', {
       functionName: `${props.subDomain}-health-check-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -243,9 +255,9 @@ export class CdkStack extends Stack {
     })
     // Grant Lambdas that need it access to the Aurora Data API
 
-    // cluster.grantDataApiAccess(productCatalogLambda)
-    // cluster.grantDataApiAccess(postProductLambda)
-    // productCardsBucket.grantReadWrite(postProductLambda)
+    cluster.grantDataApiAccess(productCatalogLambda)
+    cluster.grantDataApiAccess(postProductLambda)
+   
 
     // ----------------------------------
     // API Gateway
@@ -487,7 +499,7 @@ export class CdkStack extends Stack {
     // COMMENT THIS SECTION OUT UNTIL AURORA IS ENABLED
     // --------------------------------------------------
 
-    /*
+    
     new cdk.CfnOutput(this, "06_Database_ClusterArn", {
       value: cluster.clusterArn
     })
@@ -503,7 +515,7 @@ export class CdkStack extends Stack {
     new cdk.CfnOutput(this, "06_Database_SecretArn", {
       value: cluster.secret?.secretArn || "NOT_SET"
     })
-    */
+    
 
   }
 }

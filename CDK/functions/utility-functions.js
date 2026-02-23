@@ -8,6 +8,21 @@ function jsonResponse(statusCode, payload) {
   };
 }
 
+const logInvocationDetails = (event, context) => {
+  console.log("Event received:");
+  console.log(JSON.stringify(event, null, 2));
+
+  if (context) {
+    console.log("Context received:");
+    console.log({
+      functionName: context.functionName,
+      functionVersion: context.functionVersion,
+      awsRequestId: context.awsRequestId,
+      remainingTimeMs: context.getRemainingTimeInMillis()
+    });
+  }
+};
+
 // -------------------------
 // BOOTSTRAP HANDLER
 // -------------------------
@@ -34,127 +49,131 @@ export const bootstrapHandler = async (event, context) => {
 // -------------------------
 // PRODUCTS
 // -------------------------
-export const productCatalogHandler = async (event, context) => {
-  logInvocationDetails(event, context)
-
+export const productCatalogHandler = async () => {
   try {
     const result = await runQuery(`
       SELECT id, name, description, price_credit, image_url, era
-      FROM products
-      WHERE image IS NOT NULL
-      ORDER BY id;
-    `)
+      FROM products;
+    `);
 
-    const rows = normaliseRows(result)
-
-    // Use the pdf_url to derive the slug the front end expects
-    const productObjects = rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      priceCredit: r.price_credit,
-      imageUrl: r.image_url,
-      slug: r.image_url.replace(/\.image$/i, '')
-    }))
-
-    const productSlugs = productObjects.map((p) => p.slug)
+    const products =
+      result?.records ||
+      result?.rows ||
+      [];
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        status: 'ok',
-        featuredProduct: process.env.FEATURED_PRODUCT || null,
-        products: productSlugs,        // what the UI already uses
-        productDetails: productObjects // extra data if you need it later
+        status: "ok",
+        products
       })
-    }
+    };
+
   } catch (error) {
-    console.error('productCatalogHandler error:', error)
+    console.error("Catalog error:", error);
 
     return {
       statusCode: 500,
       body: JSON.stringify({
-        status: 'error',
-        message: 'Failed to load products'
+        status: "error",
+        message: "Failed to load products"
       })
-    }
+    };
   }
-}
+};
+
+  // try {
+    
+//     const result = await runQuery(`
+//       SELECT name, description, price_credit, image_url, era
+//       FROM products;
+//     `)
+
+//     const rows = normaliseRows(result)
+
+//     // Use the pdf_url to derive the slug the front end expects
+//     const productObjects = rows.map((r) => ({
+//       name: r.name,
+//       description: r.description,
+//       priceCredit: r.price_credit,
+//       imageUrl: r.image_url,
+//       slug: r.image_url.replace(/\.image$/i, '')
+//     }))
+
+//     const productSlugs = productObjects.map((p) => p.slug)
+
+//     return {
+//       statusCode: 200,
+//       body: JSON.stringify({
+//         status: 'ok',
+//         featuredProduct: process.env.FEATURED_PRODUCT || null,
+//         products: productSlugs,        // what the UI already uses
+//         productDetails: productObjects // extra data if you need it later
+//       })
+//     }
+//   } catch (error) {
+//     console.error('productCatalogHandler error:', error)
+
+//     return {
+//       statusCode: 500,
+//       body: JSON.stringify({
+//         status: 'error',
+//         message: 'Failed to load products'
+//       })
+//     }
+//   }
+// }
 
 export const postProductHandler = async (event) => {
-  console.log('postProductHandler invoked')
-
-  const body = event.body ? JSON.parse(event.body) : {}
-
-  // support either pricePounds (our preferred shape) or price
-  // const rawPrice =
-  //   typeof body.pricePounds === 'number'
-  //     ? body.pricePounds
-  //     : Number(body.price)
-
-  if (!body.name || !Number.isFinite(price_credit)) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        status: 'error',
-        message: 'name and pricePounds (number) are required',
-      }),
-    }
-  }
-
-  const name = body.name
-  const description = body.description || ''
-  const category = body.category || 'Uncategorised'
-  const price_credit = Math.round(price_credit * 1)
-
   try {
-   
+    const body = JSON.parse(event.body || "{}");
 
-    // 2. Insert product row, storing ONLY the key in pdf_url
+    if (!body.name || typeof body.price_credit !== "number") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          status: "error",
+          message: "name and price_credit required"
+        })
+      };
+    }
+
     const insertSql = `
       INSERT INTO products (name, description, price_credit, image_url, era)
       VALUES (:name, :description, :price_credit, :image_url, :era)
       RETURNING id, name, description, price_credit, image_url, era
-    `
+    `;
 
-    const insertResult = await runQuery(insertSql, {
-      name,
-      description,
-      price_credit,
-      image_url,
-      era
-    })
+    const result = await runQuery(insertSql, {
+      name: body.name,
+      description: body.description || "",
+      price_credit: body.price_credit,
+      image_url: body.image_url || "",
+      era: body.era || ""
+    });
 
-    const row =
-      insertResult?.records?.[0] ||
-      insertResult?.rows?.[0] ||
-      insertResult?.[0]
-
-    const product = {
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      price_credit: row.price_credit,
-      image_url: row.image_url,
-      era: row.era,
-    }
+    const product =
+      result?.records?.[0] ||
+      result?.rows?.[0];
 
     return {
       statusCode: 201,
       body: JSON.stringify({
-        status: 'created',
-        product,
-      }),
-    }
+        status: "created",
+        product
+      })
+    };
+
   } catch (error) {
-    console.error('Error creating product', error)
+    console.error("Error creating product:", error);
 
     return {
       statusCode: 500,
       body: JSON.stringify({
-        status: 'error',
-        message: 'Could not create product',
-      }),
-    }
+        status: "error",
+        message: "Could not create product"
+      })
+    };
   }
-}
+};
+
