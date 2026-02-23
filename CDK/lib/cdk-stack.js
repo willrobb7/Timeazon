@@ -245,7 +245,7 @@ export class CdkStack extends Stack {
     const postUsersLambda = new nodejs.NodejsFunction(this, 'post-users-lambda', {
       functionName: `${props.subDomain}-post-users-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: 'functions/users.js',
+      entry: 'functions/utility-functions.js',
       handler: 'postUsersHandler',
       bundling,
       environment: lambdaEnvVars
