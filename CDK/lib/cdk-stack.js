@@ -272,9 +272,8 @@ export class CdkStack extends Stack {
     const loginLambda = new nodejs.NodejsFunction(this, 'login-lambda', {
       functionName: `${props.subDomain}-login-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: 'functions/users.js',
-      handler: 'loginHandler',
-      bundling,
+      handler: 'utility-functions.loginHandler',
+      code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
     })
 
@@ -352,6 +351,9 @@ export class CdkStack extends Stack {
 
     const usersApi = api.root.addResource('users')
     usersApi.addMethod('POST', new apigw.LambdaIntegration(postUsersLambda))
+
+    const loginApi = api.root.addResource('login')
+    loginApi.addMethod('POST', new apigw.LambdaIntegration(loginLambda))
 
     const addToCartApi = api.root.addResource("addtocart");
     addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
