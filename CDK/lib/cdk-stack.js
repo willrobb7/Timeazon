@@ -266,7 +266,15 @@ export class CdkStack extends Stack {
       code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
      })
-       
+    
+     const deleteProductLambda = new lambda.Function(this, 'delete-product-lambda', {
+      functionName: `${props.subDomain}-delete-product-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'utility-functions.deleteProductHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: lambdaEnvVars
+     })
+
     // product catalogue
     const productCatalogLambda = new lambda.Function(this, 'product-catalog-lambda', {
       functionName: `${props.subDomain}-product-catalog-lambda`,
@@ -284,6 +292,7 @@ export class CdkStack extends Stack {
     cluster.grantDataApiAccess(productCatalogLambda)
     cluster.grantDataApiAccess(postProductLambda)
     cluster.grantDataApiAccess(bootstrapLambda)
+    cluster.grantDataApiAccess(deleteProductLambda)
     
     // Sign up, log in and add to cart lambdas that will use DynamoDB
     // sign up
@@ -377,6 +386,7 @@ export class CdkStack extends Stack {
     const productsApi = api.root.addResource('products')
     productsApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
     productsApi.addMethod('POST', new apigw.LambdaIntegration(postProductLambda))
+    productsApi.addMethod('DELETE', new apigw.LambdaIntegration(deleteProductLambda))
 
     const usersApi = api.root.addResource('users')
     usersApi.addMethod('POST', new apigw.LambdaIntegration(postUsersLambda))
