@@ -1,3 +1,4 @@
+import Carousel from "./Carousel";
 import HomePageCard from "./Homepagecard";
 
 export default function Homepage(props) {
@@ -30,6 +31,8 @@ export default function Homepage(props) {
             />
           ))}
         </div>
+        
+        <Carousel ></Carousel>
       </div>
     );
 }

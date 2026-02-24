@@ -59,80 +59,131 @@ export const bootstrapHandler = async (event, context) => {
 // -------------------------
 // PRODUCTS
 // -------------------------
-export const productCatalogHandler = async (event, context) => {
-  logInvocationDetails(event, context);
-
+export const productCatalogHandler = async () => {
   try {
-    // When Aurora is wired in and env vars are set:
-    //
-    // const result = await runQuery(`
-    //   SELECT id, name, description, price_credit, image_url
-    //   FROM products
-    //   WHERE image_url IS NOT NULL
-    //   ORDER BY id;
-    // `);
-    //
-    // const rows = normaliseRows(result);
-    // const productObjects = rows.map((r) => ({
-    //   id: r.id,
-    //   name: r.name,
-    //   description: r.description,
-    //   priceCredit: r.price_credit,
-    //   imageUrl: r.image_url,
-    //   slug: r.image_url.replace(/\.image$/i, '')
-    // }));
-    //
-    // const productSlugs = productObjects.map((p) => p.slug);
+    const result = await runQuery(`
+      SELECT id, name, description, price_credit, image_url, era
+      FROM products;
+    `);
 
-    // For now, static mock until DB is ready:
-    return jsonResponse(200, {
-      status: 'ok',
-      product: {
-        product_id: 'productId',
-        name: 'Magna Carta',
-        description:
-          'The Magna Carta, also known as the Great Charter, is a historic document that was signed in 1215. It established the principle that everyone, including the king, is subject to the law.',
-        priceCredit: '500',
-        image: 'magna-carta.png'
-      }
-      // featuredProduct: process.env.FEATURED_PRODUCT || null,
-      // products: productSlugs,
-      // productDetails: productObjects
-    });
+    const products =
+      result?.records ||
+      result?.rows ||
+      [];
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        status: "ok",
+        products
+      })
+    };
+
   } catch (error) {
-    console.error('productCatalogHandler error:', error);
+    console.error("Catalog error:", error);
 
-    return jsonResponse(500, {
-      status: 'error',
-      message: 'Failed to load products'
-    });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        status: "error",
+        message: "Failed to load products"
+      })
+    };
   }
 };
 
-// -------------------------
-// USERS
-// -------------------------
-export const postUsersHandler = async (event, context) => {
-  logInvocationDetails(event, context);
+  // try {
+    
+//     const result = await runQuery(`
+//       SELECT name, description, price_credit, image_url, era
+//       FROM products;
+//     `)
 
+//     const rows = normaliseRows(result)
+
+//     // Use the pdf_url to derive the slug the front end expects
+//     const productObjects = rows.map((r) => ({
+//       name: r.name,
+//       description: r.description,
+//       priceCredit: r.price_credit,
+//       imageUrl: r.image_url,
+//       slug: r.image_url.replace(/\.image$/i, '')
+//     }))
+
+//     const productSlugs = productObjects.map((p) => p.slug)
+
+//     return {
+//       statusCode: 200,
+//       body: JSON.stringify({
+//         status: 'ok',
+//         featuredProduct: process.env.FEATURED_PRODUCT || null,
+//         products: productSlugs,        // what the UI already uses
+//         productDetails: productObjects // extra data if you need it later
+//       })
+//     }
+//   } catch (error) {
+//     console.error('productCatalogHandler error:', error)
+
+//     return {
+//       statusCode: 500,
+//       body: JSON.stringify({
+//         status: 'error',
+//         message: 'Failed to load products'
+//       })
+//     }
+//   }
+// }
+
+export const postProductHandler = async (event) => {
   try {
-    // Later: parse event.body and actually insert into DB using runQuery.
-    // For now, return a static payload.
-    return jsonResponse(201, {
-      status: 'User created successfully',
-      user: {
-        user_id: 'userId',
-        name: 'Darshan Dave',
-        username: 'darshan_dave',
-        email: 'darshan@example.com'
-      }
-    });
-  } catch (error) {
-    console.error('postUsersHandler error:', error);
+    const body = JSON.parse(event.body || "{}");
 
-    return jsonResponse(500, {
-      status: 'error',
-      message: 'Failed to create user'
+    if (!body.name || typeof body.price_credit !== "number") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          status: "error",
+          message: "name and price_credit required"
+        })
+      };
+    }
+
+    const insertSql = `
+      INSERT INTO products (name, description, price_credit, image_url, era)
+      VALUES (:name, :description, :price_credit, :image_url, :era)
+      RETURNING id, name, description, price_credit, image_url, era
+    `;
+
+    const result = await runQuery(insertSql, {
+      name: body.name,
+      description: body.description || "",
+      price_credit: body.price_credit,
+      image_url: body.image_url || "",
+      era: body.era || ""
     });
+
+    const product =
+      result?.records?.[0] ||
+      result?.rows?.[0];
+
+    return {
+      statusCode: 201,
+      body: JSON.stringify({
+        status: "created",
+        product
+      })
+    };
+
+  } catch (error) {
+    console.error("Error creating product:", error);
+
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        status: "error",
+        message: "Could not create product"
+      })
+    };
   }
 };
+

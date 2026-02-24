@@ -1,10 +1,12 @@
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 import { BackButton } from "./BackButton.jsx";
 import "./ProductPage.css"
 
 export default function ProductPage({ products }) {
   console.log(products);
   const { id } = useParams();
+  
 
   const product = products.find(
     p => p.id === Number(id)
@@ -28,4 +30,5 @@ export default function ProductPage({ products }) {
     </div>
   );
 }
+
 

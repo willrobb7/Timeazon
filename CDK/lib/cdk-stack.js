@@ -64,51 +64,51 @@ export class CdkStack extends Stack {
     // // Db configuration – Postgres engine and parameter group
 
     // // Choose the Aurora Postgres engine version
-    // const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
+    const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
 
-    // const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
-    //   version: postgresVersion,
-    // });
+    const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
+      version: postgresVersion,
+    });
 
-    // // Create a parameter group that forces SSL
-    // const postgresParameterGroup = new rds.ParameterGroup(
-    //   this,
-    //   'postgres-parameter-group',
-    //   {
-    //     name: `${props.subDomain}-ParameterGroup`,
-    //     engine: postgresEngine,
-    //     description: `${props.subDomain} parameter group with SSL enforced`,
-    //     removalPolicy: cdk.RemovalPolicy.DESTROY,
-    //     parameters: {
-    //       'rds.force_ssl': '1' // require SSL for database connections
-    //     }
-    //   }
-    // )
+    // Create a parameter group that forces SSL
+    const postgresParameterGroup = new rds.ParameterGroup(
+      this,
+      'postgres-parameter-group',
+      {
+        name: `${props.subDomain}-ParameterGroup`,
+        engine: postgresEngine,
+        description: `${props.subDomain} parameter group with SSL enforced`,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        parameters: {
+          'rds.force_ssl': '1' // require SSL for database connections
+        }
+      }
+    )
 
-    // const cluster = new rds.DatabaseCluster(this, 'rds-cluster', {
-    //   // Use the Postgres engine we defined above
-    //   engine: postgresEngine,
-    //   // Attach our parameter group so SSL is enforced
-    //   parameterGroup: postgresParameterGroup,
-    //   // Name of the default database in this cluster
-    //   defaultDatabaseName: props.dbName,
-    //   // Put the cluster into the shared CTA VPC
-    //   vpc: sharedVpc,
-    //   vpcSubnets: {
-    //     subnetType: ec2.SubnetType.PRIVATE_ISOLATED
-    //   },
+    const cluster = new rds.DatabaseCluster(this, 'rds-cluster', {
+      // Use the Postgres engine we defined above
+      engine: postgresEngine,
+      // Attach our parameter group so SSL is enforced
+      parameterGroup: postgresParameterGroup,
+      // Name of the default database in this cluster
+      defaultDatabaseName: props.dbName,
+      // Put the cluster into the shared CTA VPC
+      vpc: sharedVpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
+      },
     
-    //   // Aurora Serverless v2 configuration
-    //   writer: rds.ClusterInstance.serverlessV2('writer'),
-    //   serverlessV2MinCapacity: 0.5,
-    //   serverlessV2MaxCapacity: 1,
+      // Aurora Serverless v2 configuration
+      writer: rds.ClusterInstance.serverlessV2('writer'),
+      serverlessV2MinCapacity: 0.5,
+      serverlessV2MaxCapacity: 1,
     
-    //   // Needed for the Data API from our Lambdas
-    //   enableDataApi: true,
+      // Needed for the Data API from our Lambdas
+      enableDataApi: true,
     
-    //   // Tear the database down with the stack (fine for a lab, not for prod)
-    //   removalPolicy: cdk.RemovalPolicy.DESTROY
-    // })
+      // Tear the database down with the stack (fine for a lab, not for prod)
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    })
 
     // ----------------------------------
     // S3 buckets
@@ -201,13 +201,15 @@ export class CdkStack extends Stack {
     //   forceDockerBundling: true
     // }
 
+
+
     const lambdaEnvVars = {
       NODE_ENV: 'production',
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       DB_NAME: props.dbName,
       // When we add in a DB you can uncomment these 
-      // CLUSTER_ARN: cluster.clusterArn,
-      // SECRET_ARN: cluster.secret?.secretArn || 'NOT_SET',
+      CLUSTER_ARN: cluster.clusterArn,
+      SECRET_ARN: cluster.secret?.secretArn || 'NOT_SET',
       STATIC_IMAGES_BUCKET: staticImagesBucket.bucketName,
       STATIC_IMAGES_BASE_URL: `https://${staticImagesInS3Domain}`
     }
@@ -215,6 +217,30 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambdas
     // ----------------------------------
+
+    const bootstrapLambda = new nodejs.NodejsFunction(this, 'bootstrap-lambda', {
+      functionName: `${props.subDomain}-bootstrap-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/utility-functions.js',
+      handler: 'bootstrapHandler',
+      bundling,
+      environment: lambdaEnvVars
+    })
+    
+    const healthcheckLambda = new nodejs.NodejsFunction(this, 'health-check-lambda', {
+      functionName: `${props.subDomain}-health-check-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/health-check.js',
+      handler: 'healthcheckHandler'
+    })
+    // Write your other lambdas into here
+
+     const postProductLambda = new nodejs.NodejsFunction(this, 'post-product-lambda', {
+      functionName: `${props.subDomain}-post-product-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/utility-functions.js',
+      handler: 'postProductHandler',
+      bundling,
     // Write your other lambdas into here
 
     // Colin has added some basic lambda's in here. Need to change the params to make them fit the 
@@ -251,40 +277,21 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
 
-    // const productsListLambda = new nodejs.NodejsFunction(this, 'products-list-lambda', {
-    //       functionName: `${props.subDomain}-products-list-lambda`,
-    //       runtime: lambda.Runtime.NODEJS_22_X,
-    //       entry: 'functions/utility-functions.js',
-    //       handler: 'productsListHandler',
-    //       bundling,
-    //       environment: {
-    //         ...lambdaEnvVars,
-    //         FEATURED_PRODUCT: 
+    const productCatalogLambda = new nodejs.NodejsFunction(this, 'product-catalog-lambda', {
+      functionName: `${props.subDomain}-product-catalog-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/utility-functions.js',
+      handler: 'productCatalogHandler',
+      bundling,
+      environment: {
+        ...lambdaEnvVars,
+      }
+    })
+    // Grant Lambdas that need it access to the Aurora Data API
 
-    
-    // const customerListLambda = new nodejs.NodejsFunction(this, 'products-list-lambda', {
-    //       functionName: `${props.subDomain}-products-list-lambda`,
-    //       runtime: lambda.Runtime.NODEJS_22_X,
-    //       entry: 'functions/utility-functions.js',
-    //       handler: 'productsListHandler',
-    //       bundling,
-    //       environment: {
-    //         ...lambdaEnvVars,
-    //         FEATURED_PRODUCT: 
-
-    
-    // const productsListLambda = new nodejs.NodejsFunction(this, 'products-list-lambda', {
-    //       functionName: `${props.subDomain}-products-list-lambda`,
-    //       runtime: lambda.Runtime.NODEJS_22_X,
-    //       entry: 'functions/utility-functions.js',
-    //       handler: 'productsListHandler',
-    //       bundling,
-    //       environment: {
-    //         ...lambdaEnvVars,
-    //         FEATURED_PRODUCT: 
-
-        // Grant Lambdas that need it access to the Aurora Data API
-
+    cluster.grantDataApiAccess(productCatalogLambda)
+    cluster.grantDataApiAccess(postProductLambda)
+   
 // ADD TO CART LAMBDA 
     // FAVOURITES
     const postToCartLambda = new lambda.Function(this, "post-tocart-lambda", {
@@ -347,9 +354,9 @@ export class CdkStack extends Stack {
     // Allow `/api/healthcheck` to receive GET requests, and tell it which lambder to trigger whn it does
     healthchckApi.addMethod('GET', new apigw.LambdaIntegration(healthcheckLambda))
     
-    //ADD ENDPOINT HERE
-    const productCatalogApi = api.root.addResource('product')
-    productCatalogApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
+    const productsApi = api.root.addResource('products')
+    productsApi.addMethod('GET', new apigw.LambdaIntegration(productCatalogLambda))
+    productsApi.addMethod('POST', new apigw.LambdaIntegration(postProductLambda))
 
     const usersApi = api.root.addResource('users')
     usersApi.addMethod('POST', new apigw.LambdaIntegration(postUsersLambda))
@@ -501,10 +508,15 @@ export class CdkStack extends Stack {
       value: `https://${api.restApiId}.execute-api.${props.env.region}.amazonaws.com/api/healthcheck`
     })
 
-    // new cdk.CfnOutput(this, "Product_Catalog_Endpoint", {
-    //   value: `https://${api.restApiId}.execute-api.${props.env.region}.amazonaws.com/api/product-catalog`
-    // })
+    new cdk.CfnOutput(this, "productCatalogLambda_ViaCloudFront", {
+      value: `https://${fullDomain}/api/products`
+    })
 
+    new cdk.CfnOutput(this, "productCatalolgLambda_DirectApiGateway", {
+      value: `https://${api.restApiId}.execute-api.${props.env.region}.amazonaws.com/api/products`
+    })
+
+    
     // --------------------------------------------------
     // 03 – CloudFront (Debugging + invalidations)
     // --------------------------------------------------
@@ -553,7 +565,7 @@ export class CdkStack extends Stack {
     // COMMENT THIS SECTION OUT UNTIL AURORA IS ENABLED
     // --------------------------------------------------
 
-    /*
+    
     new cdk.CfnOutput(this, "06_Database_ClusterArn", {
       value: cluster.clusterArn
     })
@@ -569,7 +581,7 @@ export class CdkStack extends Stack {
     new cdk.CfnOutput(this, "06_Database_SecretArn", {
       value: cluster.secret?.secretArn || "NOT_SET"
     })
-    */
+    
 
   }
 }

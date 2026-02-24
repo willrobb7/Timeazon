@@ -21,14 +21,14 @@ export const sql01_createCustomersTable = `
   );
 `;
 
-export const sql02_createProductsTable = `
+export const sql02_createProductTable = `
   CREATE TABLE IF NOT EXISTS products (
     id          SERIAL PRIMARY KEY,
     name        TEXT NOT NULL,
     description TEXT,
-    price_pence INTEGER NOT NULL,
-    pdf_url     TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    price_credits INTEGER NOT NULL,
+    image_url     TEXT,
+    era        TEXT NOT NULL
   );
 `;
 
@@ -54,56 +54,25 @@ export const sql04_seedCustomers = `
 `;
 
 export const sql05_seedProducts = `
-  INSERT INTO products (name, description, price_pence, pdf_url) VALUES
-    ('Blueberry Muffin',
-     'Soft muffin packed with blueberries',
+  INSERT INTO products (id, name, description, price_credits, image_url, era) VALUES
+    ('Sword',
+     'Old Sword',
      275,
-     'blueberry_muffin.pdf'),
+     'atgSword.jpg',
+     'past'),
 
-    ('Butter Croissant',
-     'Flaky, buttery croissant',
-     275,
-     'butter_croissant.pdf'),
+    ('Magna Carta',
+     'Old Book',
+     2875,
+     'magnaCarta.png',
+     'past'),
 
-    ('Chocolate Brownie',
-     'Rich chocolate brownie slice',
-     295,
-     'chocolate_brownie.pdf'),
+     ('Temporal Stabiliser version 7.0',
+     'New Gadget',
+     9800,
+     'temporalStabiliser.jpg',
+     'future'),
 
-    ('Cinnamon Bun',
-     'Soft bun with cinnamon sugar swirl',
-     350,
-     'cinnamon_bun.pdf'),
-
-    ('French Baguette',
-     'Classic crusty French baguette',
-     250,
-     'french_baguette.pdf'),
-
-    ('Pain Au Chocolat',
-     'Laminated pastry with dark chocolate',
-     295,
-     'pain_au_chocolat.pdf'),
-
-    ('Sausage Roll',
-     'Puff pastry roll with seasoned sausage filling',
-     250,
-     'sausage_roll.pdf'),
-
-    ('Sourdough Loaf',
-     'Slow-fermented sourdough loaf, baked daily',
-     495,
-     'sourdough_loaf.pdf'),
-
-    ('Vegan Banana Bread',
-     'Moist banana loaf made with plant-based ingredients',
-     325,
-     'vegan_banana_bread.pdf'),
-
-    ('Victoria Sponge Slice',
-     'Classic vanilla sponge with jam and cream',
-     325,
-     'victoria_sponge_slice.pdf')
   ON CONFLICT DO NOTHING;
 `;
 
