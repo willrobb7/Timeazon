@@ -3,12 +3,8 @@ import client from "data-api-client";
 
 import {
   sql00_dropAllTables,
-  sql01_createCustomersTable,
-  sql02_createProductTable,
-  sql03_createOrdersTable,
-  sql04_seedCustomers,
-  sql05_seedProducts,
-  sql06_seedOrders
+  sql01_createProductsTable,
+  sql02_seedProducts
 } from "./db-bootstrap-sqls.js";
 
 const connection = client({
@@ -22,22 +18,22 @@ export async function runQuery(sql, params = {}) {
   return connection.query(sql, params);
 }
 
-// This is the "bootstrap" the breakout slide refers to
+// Bootstrap: wipe and re seed only the products table
 export async function bootstrapDatabase() {
   const statements = [
     sql00_dropAllTables,
-    sql01_createCustomersTable,
-    sql02_createProductTable,
-    sql03_createOrdersTable,
-    sql04_seedCustomers,
-    sql05_seedProducts,
-    sql06_seedOrders
+    sql01_createProductsTable,
+    sql02_seedProducts
   ];
 
-  for (const statement of statements) {
+  for (let i = 0; i < statements.length; i++) {
+    const statement = statements[i];
+    console.log(`\n=== Running bootstrap SQL #${i + 1} ===`);
+    console.log(statement);
+
     await runQuery(statement);
+    console.log(`=== SQL #${i + 1} OK ===`);
   }
 
-  // Return a numeric HTTP code, not a string, from the Lambda
   return 201;
 }

@@ -17,6 +17,7 @@ import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs'
 import * as apigw from 'aws-cdk-lib/aws-apigateway'
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 
 
 const __filename = fileURLToPath(import.meta.url)
@@ -58,12 +59,11 @@ export class CdkStack extends Stack {
       region: props.env.region
     })
     
-    // // ----------------------------------
-    // // Databases - ONLY UNCOMMENT THIS WHEN YOU ARE READY TO ADD A DATABASE / YOUR APPICATION IS SET UP TO UTILISE A DATABASE AS IT'S CRAZY EXPENSIVE 
-    // // ----------------------------------
-    // // Db configuration – Postgres engine and parameter group
+    // ----------------------------------
+    // Databases - ONLY UNCOMMENT THIS WHEN YOU ARE READY TO ADD A DATABASE / YOUR APPICATION IS SET UP TO UTILISE A DATABASE AS IT'S CRAZY EXPENSIVE 
+    // ----------------------------------
 
-    // // Choose the Aurora Postgres engine version
+    // Choose the Aurora Postgres engine version
     const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
 
     const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
@@ -111,8 +111,30 @@ export class CdkStack extends Stack {
     })
 
     // ----------------------------------
+    // DynamoDB tables
+    // ----------------------------------
+
+    // Users table (one row per user)
+    const usersTable = new dynamodb.Table(this, 'users-table', {
+      tableName: `${props.subDomain}-users`,
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    })
+
+    // Cart table (many items per user)
+    const cartTable = new dynamodb.Table(this, 'cart-table', {
+      tableName: `${props.subDomain}-cart`,
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'productId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    })
+
+    // ----------------------------------
     // S3 buckets
     // ----------------------------------
+
     const staticImagesBucket = new s3.Bucket(this, 'static-images', {
       bucketName: `${props.subDomain}-static-images`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -169,6 +191,7 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Certificate
     // ----------------------------------
+
     const cert = acm.Certificate.fromCertificateArn(this,
       'BakehouseCert', //Don't change this i only made one cert 
       props.certArn
@@ -178,7 +201,6 @@ export class CdkStack extends Stack {
     // CloudFront function
     // ----------------------------------
 
-    // You will have to impliment redirecting in cloudfront 
     const redirectsFunction = new cloudfront.Function(this, 'redirects-function', {
       functionName: `${props.subDomain}-redirects`,
       code: cloudfront.FunctionCode.fromFile({
@@ -195,23 +217,26 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambda bundling
     // ----------------------------------
-    // const bundling = {
-    //   externalModules: ['aws-sdk'],
-    //   nodeModules: ['data-api-client'],
-    //   forceDockerBundling: true
-    // }
-
-
 
     const lambdaEnvVars = {
       NODE_ENV: 'production',
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+    
+      // Aurora
       DB_NAME: props.dbName,
-      // When we add in a DB you can uncomment these 
       CLUSTER_ARN: cluster.clusterArn,
       SECRET_ARN: cluster.secret?.secretArn || 'NOT_SET',
+    
+      // Static assets
       STATIC_IMAGES_BUCKET: staticImagesBucket.bucketName,
-      STATIC_IMAGES_BASE_URL: `https://${staticImagesInS3Domain}`
+      STATIC_IMAGES_BASE_URL: `https://${staticImagesInS3Domain}`,
+    
+      // DynamoDB – users
+      DYNAMO_TABLE_NAME: usersTable.tableName,
+      DYNAMO_REGION: cdk.Stack.of(this).region,
+    
+      // DynamoDB – cart
+      CART_TABLE_NAME: cartTable.tableName
     }
 
     // ----------------------------------
@@ -226,18 +251,6 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
   
-    // Write your other lambdas into here
-
-     const postProductLambda = new lambda.Function(this, 'post-product-lambda', {
-      functionName: `${props.subDomain}-post-product-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      handler: 'utility-functions.postProductHandler',
-      code: lambda.Code.fromAsset('functions'),
-      environment: lambdaEnvVars
-     })
-   
-    // WILL CHANGES 
-    
     const healthcheckLambda = new lambda.Function(this, 'health-check-lambda', {
       functionName: `${props.subDomain}-health-check-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -246,6 +259,14 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
 
+     const postProductLambda = new lambda.Function(this, 'post-product-lambda', {
+      functionName: `${props.subDomain}-post-product-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'utility-functions.postProductHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: lambdaEnvVars
+     })
+       
     // product catalogue
     const productCatalogLambda = new lambda.Function(this, 'product-catalog-lambda', {
       functionName: `${props.subDomain}-product-catalog-lambda`,
@@ -257,34 +278,32 @@ export class CdkStack extends Stack {
         FEATURED_PRODUCT: ''
       }
     })
-
+    
+    // Grant Lambdas that need it access to the Aurora Data API
+    
+    cluster.grantDataApiAccess(productCatalogLambda)
+    cluster.grantDataApiAccess(postProductLambda)
+    cluster.grantDataApiAccess(bootstrapLambda)
+    
+    // Sign up, log in and add to cart lambdas that will use DynamoDB
     // sign up
     const postUsersLambda = new lambda.Function(this, 'post-users-lambda', {
       functionName: `${props.subDomain}-post-users-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      handler: 'utility-functions.postUsersHandler',
+      handler: 'users.postUsersHandler',
       code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
     })
 
-    //login 
-
-    const loginLambda = new nodejs.NodejsFunction(this, 'login-lambda', {
+    // log in
+    const loginLambda = new lambda.Function(this, 'login-lambda', {
       functionName: `${props.subDomain}-login-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      handler: 'utility-functions.loginHandler',
+      handler: 'users.loginHandler',
       code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
     })
 
-    // Grant Lambdas that need it access to the Aurora Data API
-
-    cluster.grantDataApiAccess(productCatalogLambda)
-    cluster.grantDataApiAccess(postProductLambda)
-    
-   
-// ADD TO CART LAMBDA 
-    // FAVOURITES
     const postToCartLambda = new lambda.Function(this, "post-tocart-lambda", {
       functionName: `${props.subDomain}-post-tocart-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -308,6 +327,16 @@ export class CdkStack extends Stack {
       code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
     });
+
+    // DynamoDB permissions
+    // Users table
+    usersTable.grantReadWriteData(postUsersLambda)
+    usersTable.grantReadData(loginLambda)
+
+    // Cart table
+    cartTable.grantReadWriteData(postToCartLambda)
+    cartTable.grantReadWriteData(getToCartLambda)
+    cartTable.grantReadWriteData(deleteFromCartLambda)
 
     // ----------------------------------
     // API Gateway
@@ -382,7 +411,8 @@ export class CdkStack extends Stack {
           ),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER
         }
       },
       errorResponses: [

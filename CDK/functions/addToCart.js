@@ -1,171 +1,187 @@
 // functions/addToCart.js
-export const postToCartHandler = async () => {
-  return {
-    statusCode: 201,
-    body: JSON.stringify({ status: 'ok' })
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  QueryCommand,
+  DeleteCommand
+} from "@aws-sdk/lib-dynamodb";
+
+// CDK should set this via lambdaEnvVars
+const TABLE_NAME = process.env.CART_TABLE_NAME;
+
+// Use Lambda’s default region (no need for a custom env var)
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+
+const jsonResponse = (statusCode, body) => ({
+  statusCode,
+  headers: {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*"
+  },
+  body: JSON.stringify(body)
+});
+
+const parseBody = (event) => {
+  if (!event?.body) return {};
+  try {
+    return JSON.parse(event.body);
+  } catch {
+    return {};
   }
-}
+};
 
-export const getToCartHandler = async () => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ status: 'ok' })
+const normaliseEmail = (email) => String(email || "").trim().toLowerCase();
+const normaliseProductId = (productId) => String(productId || "").trim();
+
+/**
+ * POST /api/addtocart
+ * Body: { email, productId }
+ * Adds an item to the user’s cart 
+ */
+export const postToCartHandler = async (event) => {
+  console.log("postToCartHandler event:", JSON.stringify(event));
+
+  try {
+    if (!TABLE_NAME) {
+      return jsonResponse(500, {
+        status: "error",
+        message: "Missing CART_TABLE_NAME env var"
+      });
+    }
+
+    const body = parseBody(event);
+    const email = normaliseEmail(body.email);
+    const productId = normaliseProductId(body.productId);
+
+    if (!email || !productId) {
+      return jsonResponse(400, {
+        status: "error",
+        message: "email and productId are required"
+      });
+    }
+
+    const item = {
+      email,
+      productId,
+      createdAt: new Date().toISOString()
+    };
+
+    await ddb.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: item
+      })
+    );
+
+    return jsonResponse(201, {
+      status: "added to cart",
+      cartItem: item
+    });
+  } catch (err) {
+    console.error("postToCartHandler error:", err);
+    return jsonResponse(500, {
+      status: "error",
+      message: "Could not add product to cart"
+    });
   }
-}
+};
 
-export const deleteFromCartHandler = async () => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ status: 'ok' })
+/**
+ * GET /api/addtocart?email=...
+ * Returns all items in the user’s cart
+ */
+export const getToCartHandler = async (event) => {
+  console.log("getToCartHandler event:", JSON.stringify(event));
+
+  try {
+    if (!TABLE_NAME) {
+      return jsonResponse(500, {
+        status: "error",
+        message: "Missing CART_TABLE_NAME env var"
+      });
+    }
+
+    const email = normaliseEmail(event?.queryStringParameters?.email);
+
+    if (!email) {
+      return jsonResponse(400, {
+        status: "error",
+        message: "Missing email query parameter"
+      });
+    }
+
+    const result = await ddb.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "#email = :email",
+        ExpressionAttributeNames: { "#email": "email" },
+        ExpressionAttributeValues: { ":email": email }
+      })
+    );
+
+    const cartItems = result?.Items || [];
+
+    return jsonResponse(200, {
+      status: "ok",
+      email,
+      count: cartItems.length,
+      cartItems
+    });
+  } catch (err) {
+    console.error("getToCartHandler error:", err);
+    return jsonResponse(500, {
+      status: "error",
+      message: "Could not load cart"
+    });
   }
-}
+};
 
-// import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-// import {
-//   DynamoDBDocumentClient,
-//   PutCommand,
-//   QueryCommand,
-//   DeleteCommand
-// } from "@aws-sdk/lib-dynamodb";
+/**
+ * DELETE /api/addtocart
+ * Body: { email, productId }
+ * Removes an item from the cart
+ */
+export const deleteFromCartHandler = async (event) => {
+  console.log("deleteFromCartHandler event:", JSON.stringify(event));
 
-// // CDK sets these via lambdaEnvVars
-// const TABLE_NAME = process.env.FAVOURITES_TABLE_NAME;
-// const REGION = process.env.DYNAMO_REGION;
+  try {
+    if (!TABLE_NAME) {
+      return jsonResponse(500, {
+        status: "error",
+        message: "Missing CART_TABLE_NAME env var"
+      });
+    }
 
-// const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: REGION }));
+    const body = parseBody(event);
+    const email = normaliseEmail(body.email);
+    const productId = normaliseProductId(body.productId);
 
-// const jsonResponse = (statusCode, body) => ({
-//   statusCode,
-//   headers: {
-//     "Content-Type": "application/json",
-//     "Access-Control-Allow-Origin": "*"
-//   },
-//   body: JSON.stringify(body)
-// });
+    if (!email || !productId) {
+      return jsonResponse(400, {
+        status: "error",
+        message: "email and productId are required"
+      });
+    }
 
-// const parseBody = (event) => {
-//   if (!event?.body) return {};
-//   try {
-//     return JSON.parse(event.body);
-//   } catch {
-//     return {};
-//   }
-// };
+    await ddb.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: { email, productId }
+      })
+    );
 
-// const normaliseEmail = (email) => String(email || "").trim().toLowerCase();
-// const normaliseProductId = (productId) => String(productId || "").trim();
-
-// POST /api/addToCart
-// Body: { email, productId }
-// Adds to cart (idempotent: calling again just overwrites same item)
-// export const postToCartHandler = async (event) => {
-//   console.log("event:", JSON.stringify(event));
-//   console.log("body:", event.body);
-//   try {
-//     if (!TABLE_NAME) return jsonResponse(500, { status: "error", message: "Missing FAVOURITES_TABLE_NAME" });
-//     if (!REGION) return jsonResponse(500, { status: "error", message: "Missing DYNAMO_REGION" });
-
-//     const body = parseBody(event);
-//     const email = normaliseEmail(body.email);
-//     const productId = normaliseProductId(body.productId);
-
-//     if (!email || !productId) {
-//       return jsonResponse(400, { status: "error", message: "Email and productId are required" });
-//     }
-
-//     const item = {
-//       email,
-//       productId,
-//       createdAt: new Date().toISOString()
-//     };
-
-//     await ddb.send(
-//       new PutCommand({
-//         TableName: TABLE_NAME,
-//         Item: item
-//       })
-//     );
-
-//     return jsonResponse(201, {
-//       status: "added to cart",
-//       favourite: item
-//     });
-//   } catch (err) {
-//     console.error("postToCartHandler error:", err);
-//     return jsonResponse(500, { status: "error", message: "Could not add product to cart" });
-//   }
-// };
-
-// GET /api/addToCart?email=...
-// Returns all products in cart for a user using Query on the partition key
-// export const getToCartHandler = async (event) => {
-//   console.log("event:", JSON.stringify(event));
-//   console.log("body:", event.body);
-//   try {
-//     if (!TABLE_NAME) return jsonResponse(500, { status: "error", message: "Missing FAVOURITES_TABLE_NAME" });
-//     if (!REGION) return jsonResponse(500, { status: "error", message: "Missing DYNAMO_REGION" });
-
-//     const email = normaliseEmail(event?.queryStringParameters?.email);
-
-//     if (!email) {
-//       return jsonResponse(400, { status: "error", message: "Missing email query parameter" });
-//     }
-
-//     const result = await ddb.send(
-//       new QueryCommand({
-//         TableName: TABLE_NAME,
-//         KeyConditionExpression: "#email = :email",
-//         ExpressionAttributeNames: { "#email": "email" },
-//         ExpressionAttributeValues: { ":email": email }
-//       })
-//     );
-
-//     const favourites = result?.Items || [];
-
-//     return jsonResponse(200, {
-//       status: "ok",
-//       email,
-//       count: favourites.length,
-//       favourites
-//     });
-//   } catch (err) {
-//     console.error("getToCartHandler error:", err);
-//     return jsonResponse(500, { status: "error", message: "Could not load the cart" });
-//   }
-// };
-
-// DELETE /api/favourites
-// Body: { email, productId }
-// Removes a favourite if it exists
-// export const deleteFromCartHandler = async (event) => {
-//   console.log("event:", JSON.stringify(event));
-//   console.log("body:", event.body);
-//   try {
-//     if (!TABLE_NAME) return jsonResponse(500, { status: "error", message: "Missing FAVOURITES_TABLE_NAME" });
-//     if (!REGION) return jsonResponse(500, { status: "error", message: "Missing DYNAMO_REGION" });
-
-//     const body = parseBody(event);
-//     const email = normaliseEmail(body.email);
-//     const productId = normaliseProductId(body.productId);
-
-//     if (!email || !productId) {
-//       return jsonResponse(400, { status: "error", message: "Email and productId are required" });
-//     }
-
-//     await ddb.send(
-//       new DeleteCommand({
-//         TableName: TABLE_NAME,
-//         Key: { email, productId }
-//       })
-//     );
-
-//     return jsonResponse(200, {
-//       status: "deleted",
-//       email,
-//       productId
-//     });
-//   } catch (err) {
-//     console.error("deleteFromCartHandler error:", err);
-//     return jsonResponse(500, { status: "error", message: "Could not delete product from cart" });
-//   }
-// };
+    return jsonResponse(200, {
+      status: "deleted",
+      email,
+      productId
+    });
+  } catch (err) {
+    console.error("deleteFromCartHandler error:", err);
+    return jsonResponse(500, {
+      status: "error",
+      message: "Could not delete product from cart"
+    });
+  }
+};
