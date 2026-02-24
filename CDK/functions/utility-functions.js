@@ -187,3 +187,47 @@ export const postProductHandler = async (event) => {
   }
 };
 
+  //Signup 
+  export const postUsersHandler = async (event, context) => {
+  logInvocationDetails(event, context);
+
+  try {
+    if (!event.body) {
+      return jsonResponse(400, {
+        status: 'error',
+        message: 'Request body is required'
+      });
+    }
+
+    const { user_id, name, username, email } = JSON.parse(event.body);
+
+    // Basic validation
+    if (!user_id || !name || !username || !email) {
+      return jsonResponse(400, {
+        status: 'error',
+        message: 'user_id, name, username, and email are required'
+      });
+    }
+
+    // For now, just echo back what was sent
+    return jsonResponse(201, {
+      status: 'User created successfully',
+      user: {
+        user_id,
+        name,
+        username,
+        email
+      }
+    });
+
+  } catch (error) {
+    console.error('postUsersHandler error:', error);
+
+    return jsonResponse(500, {
+      status: 'error',
+      message: 'Failed to create user'
+    });
+  }
+}
+
+
