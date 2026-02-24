@@ -354,10 +354,10 @@ export class CdkStack extends Stack {
     const usersApi = api.root.addResource('users')
     usersApi.addMethod('POST', new apigw.LambdaIntegration(postUsersLambda))
 
-    // const addToCartApi = api.root.addResource("addtocart");
-    // addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
-    // addToCartApi.addMethod("POST", new apigw.LambdaIntegration(postToCartLambda));
-    // addToCartApi.addMethod("DELETE", new apigw.LambdaIntegration(deleteFromCartLambda));
+    const addToCartApi = api.root.addResource("addtocart");
+    addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
+    addToCartApi.addMethod("POST", new apigw.LambdaIntegration(postToCartLambda));
+    addToCartApi.addMethod("DELETE", new apigw.LambdaIntegration(deleteFromCartLambda));
     // ----------------------------------
     // CloudFront distributions
     // ----------------------------------
