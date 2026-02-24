@@ -1,7 +1,7 @@
 // functions/addToCart.js
 export const postToCartHandler = async () => {
   return {
-    statusCode: 200,
+    statusCode: 201,
     body: JSON.stringify({ status: 'ok' })
   }
 }
