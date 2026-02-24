@@ -218,36 +218,28 @@ export class CdkStack extends Stack {
     // Lambdas
     // ----------------------------------
 
-    const bootstrapLambda = new nodejs.NodejsFunction(this, 'bootstrap-lambda', {
+    const bootstrapLambda = new lambda.Function(this, 'bootstrap-lambda', {
       functionName: `${props.subDomain}-bootstrap-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: 'functions/utility-functions.js',
-      handler: 'bootstrapHandler',
-      bundling,
+      handler: 'utility-functions.bootstrapHandler',
+      code: lambda.Code.fromAsset('functions'),
       environment: lambdaEnvVars
     })
-    
-    const healthcheckLambda = new nodejs.NodejsFunction(this, 'health-check-lambda', {
-      functionName: `${props.subDomain}-health-check-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: 'functions/health-check.js',
-      handler: 'healthcheckHandler'
-    })
+  
     // Write your other lambdas into here
 
-     const postProductLambda = new nodejs.NodejsFunction(this, 'post-product-lambda', {
+     const postProductLambda = new lambda.Function(this, 'post-product-lambda', {
       functionName: `${props.subDomain}-post-product-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: 'functions/utility-functions.js',
-      handler: 'postProductHandler',
-      bundling,
-    // Write your other lambdas into here
-
-    // Colin has added some basic lambda's in here. Need to change the params to make them fit the 
-    // requirements... (these are taken from the Bakehouse) 
-
+      handler: 'utility-functions.postProductHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: lambdaEnvVars
+     })
+   
     // WILL CHANGES 
-    // health check
+    
     const healthcheckLambda = new lambda.Function(this, 'health-check-lambda', {
       functionName: `${props.subDomain}-health-check-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -277,20 +269,11 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
 
-    const productCatalogLambda = new nodejs.NodejsFunction(this, 'product-catalog-lambda', {
-      functionName: `${props.subDomain}-product-catalog-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: 'functions/utility-functions.js',
-      handler: 'productCatalogHandler',
-      bundling,
-      environment: {
-        ...lambdaEnvVars,
-      }
-    })
     // Grant Lambdas that need it access to the Aurora Data API
 
     cluster.grantDataApiAccess(productCatalogLambda)
     cluster.grantDataApiAccess(postProductLambda)
+    
    
 // ADD TO CART LAMBDA 
     // FAVOURITES
