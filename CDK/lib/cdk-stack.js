@@ -58,12 +58,11 @@ export class CdkStack extends Stack {
       region: props.env.region
     })
     
-    // // ----------------------------------
-    // // Databases - ONLY UNCOMMENT THIS WHEN YOU ARE READY TO ADD A DATABASE / YOUR APPICATION IS SET UP TO UTILISE A DATABASE AS IT'S CRAZY EXPENSIVE 
-    // // ----------------------------------
-    // // Db configuration – Postgres engine and parameter group
+    // ----------------------------------
+    // Databases - ONLY UNCOMMENT THIS WHEN YOU ARE READY TO ADD A DATABASE / YOUR APPICATION IS SET UP TO UTILISE A DATABASE AS IT'S CRAZY EXPENSIVE 
+    // ----------------------------------
 
-    // // Choose the Aurora Postgres engine version
+    // Choose the Aurora Postgres engine version
     const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
 
     const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
@@ -113,6 +112,7 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // S3 buckets
     // ----------------------------------
+
     const staticImagesBucket = new s3.Bucket(this, 'static-images', {
       bucketName: `${props.subDomain}-static-images`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -169,6 +169,7 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Certificate
     // ----------------------------------
+
     const cert = acm.Certificate.fromCertificateArn(this,
       'BakehouseCert', //Don't change this i only made one cert 
       props.certArn
@@ -178,7 +179,6 @@ export class CdkStack extends Stack {
     // CloudFront function
     // ----------------------------------
 
-    // You will have to impliment redirecting in cloudfront 
     const redirectsFunction = new cloudfront.Function(this, 'redirects-function', {
       functionName: `${props.subDomain}-redirects`,
       code: cloudfront.FunctionCode.fromFile({
@@ -195,13 +195,6 @@ export class CdkStack extends Stack {
     // ----------------------------------
     // Lambda bundling
     // ----------------------------------
-    // const bundling = {
-    //   externalModules: ['aws-sdk'],
-    //   nodeModules: ['data-api-client'],
-    //   forceDockerBundling: true
-    // }
-
-
 
     const lambdaEnvVars = {
       NODE_ENV: 'production',
@@ -226,18 +219,6 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
   
-    // Write your other lambdas into here
-
-     const postProductLambda = new lambda.Function(this, 'post-product-lambda', {
-      functionName: `${props.subDomain}-post-product-lambda`,
-      runtime: lambda.Runtime.NODEJS_22_X,
-      handler: 'utility-functions.postProductHandler',
-      code: lambda.Code.fromAsset('functions'),
-      environment: lambdaEnvVars
-     })
-   
-    // WILL CHANGES 
-    
     const healthcheckLambda = new lambda.Function(this, 'health-check-lambda', {
       functionName: `${props.subDomain}-health-check-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -246,6 +227,14 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
 
+     const postProductLambda = new lambda.Function(this, 'post-product-lambda', {
+      functionName: `${props.subDomain}-post-product-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'utility-functions.postProductHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: lambdaEnvVars
+     })
+       
     // product catalogue
     const productCatalogLambda = new lambda.Function(this, 'product-catalog-lambda', {
       functionName: `${props.subDomain}-product-catalog-lambda`,
@@ -271,10 +260,11 @@ export class CdkStack extends Stack {
 
     cluster.grantDataApiAccess(productCatalogLambda)
     cluster.grantDataApiAccess(postProductLambda)
+    cluster.grantDataApiAccess(bootstrapLambda)
     
    
-// ADD TO CART LAMBDA 
-    // FAVOURITES
+    // Add to cart lambdas that will use DynamoDB
+
     const postToCartLambda = new lambda.Function(this, "post-tocart-lambda", {
       functionName: `${props.subDomain}-post-tocart-lambda`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -369,7 +359,8 @@ export class CdkStack extends Stack {
           ),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER
         }
       },
       errorResponses: [
