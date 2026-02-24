@@ -24,8 +24,6 @@ button:hover {
     display: flex;
 }
 
-/* .pageImage {
-    max-height: 50vh;
-    max-width: 30vw;
-    overflow: hidden;
-} */
+.productDetails {
+    background-color: #fff
+}

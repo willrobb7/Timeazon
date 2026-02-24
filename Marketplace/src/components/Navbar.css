@@ -31,7 +31,15 @@ ul li {
     font-size: 18px;
     cursor: pointer;
     transition: transform 0.2s ease, color 0.2s ease;
+    text-decoration:none;
+    color:aqua;
+
 }
+
+a:link {
+    text-decoration:none;
+}
+
 
 ul li:hover {
     transform: scale(1.1);

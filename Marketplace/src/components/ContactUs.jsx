@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import './ContactUs.css';
-import { BackButton } from './BackButton';
  
 function ContactForm() {
   const [formData, setFormData] = useState({
@@ -38,7 +37,6 @@ function ContactForm() {
  
   return (
     <div className="contact-form-container">
-      <BackButton />
       <h2>Contact Us</h2>
       <form onSubmit={handleSubmit} className="contact-form">
         <div className="form-group">
