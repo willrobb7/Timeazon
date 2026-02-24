@@ -267,6 +267,17 @@ export class CdkStack extends Stack {
       environment: lambdaEnvVars
     })
 
+    //login 
+
+    const loginLambda = new nodejs.NodejsFunction(this, 'login-lambda', {
+      functionName: `${props.subDomain}-login-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: 'functions/users.js',
+      handler: 'loginHandler',
+      bundling,
+      environment: lambdaEnvVars
+    })
+
     // Grant Lambdas that need it access to the Aurora Data API
 
     cluster.grantDataApiAccess(productCatalogLambda)
