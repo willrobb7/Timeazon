@@ -230,4 +230,51 @@ export const postProductHandler = async (event) => {
   }
 }
 
+export const loginHandler = async (event, context) => {
+  logInvocationDetails(event, context);
+
+  try {
+    if (!event.body) {
+      return jsonResponse(400, {
+        status: 'error',
+        message: 'Request body is required'
+      });
+    }
+
+    const { email, password } = JSON.parse(event.body);
+
+    // Basic validation
+    if (!email || !password) {
+      return jsonResponse(400, {
+        status: 'error',
+        message: 'email and password are required'
+      });
+    }
+
+    // Replace this later with DB lookup + password hash comparison
+    if (email === 'dash@example.com' && password === 'password123') {
+      return jsonResponse(200, {
+        status: 'Login successful',
+        user: {
+          email
+        },
+        token: 'fake-jwt-token'
+      });
+    }
+
+    return jsonResponse(401, {
+      status: 'error',
+      message: 'Invalid email or password'
+    });
+
+  } catch (error) {
+    console.error('loginHandler error:', error);
+
+    return jsonResponse(500, {
+      status: 'error',
+      message: 'Login failed'
+    });
+  }
+};
+
 
