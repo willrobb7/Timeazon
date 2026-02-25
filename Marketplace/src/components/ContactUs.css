@@ -8,6 +8,7 @@
   box-shadow: 0 0 20px rgba(0, 191, 255, 0.15);
   position: relative;
   overflow: hidden;
+  color:#f1feff
 }
 
 /* Subtle glow effect (same feel as login page) */
@@ -60,7 +61,7 @@
   width: 100%;
   padding: 0.75rem 1rem;
   background: transparent;
-  border: 2px solid rgba(255,255,255,0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 40px;
   font-size: 16px;
   color: #f1feff;
