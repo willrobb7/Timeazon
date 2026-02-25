@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 import { BackButton } from "./BackButton.jsx";
+import DeleteProdButton from "./DeleteProdButton.jsx";
 import "./ProductPage.css"
 
 export default function ProductPage({ products }) {
@@ -32,6 +33,10 @@ export default function ProductPage({ products }) {
       <h2>{product.title}</h2>
       <p>{product.description}</p>
       <h3>{product.price}</h3>
+      <DeleteProdButton
+        product={product.id}
+        onDeleted={()  => setRemoved(true)}
+        />
       </div>
     </div>
   );
