@@ -16,11 +16,17 @@ export default function ProductPage({ products }) {
     return <h2>Product not found</h2>;
   }
 
+  const imageBase = "https://timeazon-static-images.s3.eu-west-2.amazonaws.com";
+
+  const imageUrl = `${imageBase}/${product.image_url}`;
+
+
+
   return (
     <div className="productPageElements">
       <BackButton className="productPageBackButton"/>
       <div className="pageImage">
-      <img src={product.image} className="productPageImage"/>
+      <img src={imageUrl} className="productPageImage"/>
       </div>
       <div className="productDetails">
       <h2>{product.title}</h2>

@@ -10,7 +10,7 @@ const Navbar = () => {
       <div className="backend-status-wrapper">
     <BackendStatus />
     </div>
-      <NavLink to="/">
+      <NavLink to="/time-portal">
         <img src="/timeazon.png" alt="Website Logo" className="logo" />
       </NavLink>
 

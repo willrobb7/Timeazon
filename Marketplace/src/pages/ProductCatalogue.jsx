@@ -26,6 +26,8 @@ export default function ProductCatalogue() {
     ? products.filter(p => p.era === selectedEra)
     : products;
 
+    const imageBase = import.meta.env.VITE_STATIC_IMAGES_DOMAIN;
+    
   return (
     <div className="app">
       <h1>Featured Products</h1>
@@ -35,7 +37,7 @@ export default function ProductCatalogue() {
           <Link key={product.id} to={`/product/${product.id}`}>
             <ProductCard 
               product={product}
-              image={product.image}
+              image={product.image_url}
               title={product.title}
               price={product.price_credit}
               description={product.description}
