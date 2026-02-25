@@ -234,3 +234,6 @@ function AdminDeleteButton({ product, onDeleting }) {
 const styleTag = document.createElement("style");
 styleTag.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
 document.head.appendChild(styleTag);
+
+
+export default DeleteProdButton;
