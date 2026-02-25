@@ -16,9 +16,9 @@ export default function ProductPage({ products }) {
     return <h2>Product not found</h2>;
   }
 
-  const imageBase = "https://timeazon-static-images.s3.eu-west-2.amazonaws.com";
+  const s3domain = "https://timeazon-static-images.s3.eu-west-2.amazonaws.com";
 
-  const imageUrl = `${imageBase}/${product.image_url}`;
+  const imageUrl = `${s3domain}/${product.image_url}`;
 
 
 

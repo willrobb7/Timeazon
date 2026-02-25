@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "./sellItem.css"
 
 export default function SellItem() {
   const [form, setForm] = useState({
@@ -55,10 +54,10 @@ export default function SellItem() {
   };
 
   return (
-    <div class="sellItem">
-      <h2 class="sellTitle">Sell an Item</h2>
+    <div>
+      <h2>Sell an Item</h2>
 
-      <form className="addItemForm" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <input
           name="name"
           placeholder="Name"
@@ -90,14 +89,14 @@ export default function SellItem() {
           onChange={handleChange}
         />
 
-        <input className="eraInput"
+        <input
           name="era"
           placeholder="Era"
           value={form.era}
           onChange={handleChange}
         />
 
-        <button className="sellButton" type="submit">Post Product</button>
+        <button type="submit">Post Product</button>
       </form>
 
       {message && <p>{message}</p>}

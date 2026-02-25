@@ -1,12 +1,14 @@
 export default function ProductCard({ product, onClick }) {
 
-  
+   const s3domain = "https://timeazon-static-images.s3.eu-west-2.amazonaws.com";
+
+  const imageUrl = `${s3domain}/${product.image_url}`;
 
   return (
     <div className="product-card">
       <div className="card-frame">
         <div className="image-wrapper" onClick={onClick}>
-          <img src={product.image_url} alt={product.name} />
+          <img src={imageUrl} alt={product.name} />
 
           <button className="addToCart">+</button>
           <p className="addPrompt">Add To Cart</p>

@@ -26,10 +26,14 @@ export default function ProductCatalogue() {
     ? products.filter(p => p.era === selectedEra)
     : products;
 
-    const imageBase = import.meta.env.VITE_STATIC_IMAGES_DOMAIN;
     
   return (
     <div className="app">
+      <EraSelect
+        eras={allEras}
+        selected={selectedEra}
+        onChange={setSelectedEra}
+      />
       <h1>Featured Products</h1>
 
       <div className="product-row">
