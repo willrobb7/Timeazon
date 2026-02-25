@@ -1,5 +1,6 @@
 import Carousel from "./Carousel";
 import HomePageCard from "./Homepagecard";
+import "./Homepage.css";
 
 export default function Homepage(props) {
   const homepageItems = [
@@ -22,6 +23,9 @@ export default function Homepage(props) {
 
     return (
       <div className="app">
+        <div className="hero-title">
+        <h1>Timeazon - Shop the Future. Relive the Past.</h1>
+        </div>
         <div className="homepage-row">
           {homepageItems.map((item) => (
             <HomePageCard
@@ -32,9 +36,16 @@ export default function Homepage(props) {
           ))}
         </div>
         
+
+        <div className="hero-title">
+          <h2>Featured Products</h2>
+        </div>
         <Carousel ></Carousel>
+        <div className="footer-text">
+          Timeazon is monitored and regulated by the Department for Temporal Stability.
+        </div>
       </div>
     );
+
 }
 
-//testing comment

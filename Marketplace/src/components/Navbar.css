@@ -53,15 +53,21 @@ ul li:hover {
     padding: 10px 20px;
     border-radius: 50px;
 }
+
+.Search-bar input::placeholder{
+color: #fff;
+}
+
 .Search-bar input{
     padding: 6px;
+    color: #fff;
     background: transparent;
     border: 0;
     outline: 0;
-    color: #fff;
     font-size: 18px;
     max-width: 200px;
 }
+
 .cell{
     width: 200px;
     height: 200px;

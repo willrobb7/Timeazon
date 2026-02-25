@@ -30,7 +30,12 @@ export default function ProductCatalogue() {
     
   return (
     <div className="app">
-      <h1>Featured Products</h1>
+      <h1 className="shop-title">Time Machine Market</h1>
+            <EraSelect
+        eras={allEras}
+        selected={selectedEra}
+        onChange={setSelectedEra}
+      />
 
       <div className="product-row">
         {filteredProducts.map(product => (
@@ -46,11 +51,6 @@ export default function ProductCatalogue() {
         ))}
       </div>
 
-      <EraSelect
-        eras={allEras}
-        selected={selectedEra}
-        onChange={setSelectedEra}
-      />
     </div>
   );
 }
