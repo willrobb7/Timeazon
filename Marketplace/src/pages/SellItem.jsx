@@ -9,7 +9,9 @@ export default function SellItem() {
     era: ""
   });
 
+  const [imageFile, setImageFile] = useState(null);
   const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
     setForm(prev => ({
@@ -18,10 +20,71 @@ export default function SellItem() {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+
+    setImageFile(file);
+    // optional: clear manual url if a file has been chosen
+    // setForm(prev => ({ ...prev, image_url: "" }));
+  };
+
+  const uploadImageIfNeeded = async () => {
+    // If they typed a url manually, just use that
+    if (!imageFile) {
+      return form.image_url || "";
+    }
+
+    setUploading(true);
+
+    // 1. Ask backend for a pre signed url
+    const presignRes = await fetch("/api/image-upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: imageFile.name,
+        fileType: imageFile.type
+      })
+    });
+
+    if (!presignRes.ok) {
+      const errBody = await presignRes.text();
+      console.error("Failed to get upload url", errBody);
+      throw new Error("Could not get upload url");
+    }
+
+    const { uploadUrl, key } = await presignRes.json();
+
+    // 2. Upload the file directly to S3
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": imageFile.type
+      },
+      body: imageFile
+    });
+
+    if (!putRes.ok) {
+      console.error("Failed to upload image", putRes.status, putRes.statusText);
+      throw new Error("Image upload failed");
+    }
+
+    setUploading(false);
+    return key;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
 
     try {
+      // Upload image first (if there is one)
+      const imageKey = await uploadImageIfNeeded();
+
+      // Then create the product as before
       const response = await fetch("/api/products", {
         method: "POST",
         headers: {
@@ -31,7 +94,7 @@ export default function SellItem() {
           name: form.name,
           description: form.description,
           price_credit: Number(form.price_credit),
-          image_url: form.image_url,
+          image_url: imageKey,
           era: form.era
         })
       });
@@ -39,17 +102,17 @@ export default function SellItem() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message);
+        throw new Error(data.message || "Error from server");
       }
 
       setMessage("Product created successfully.");
 
       // quick refresh back to catalogue
       window.location.href = "/product";
-
     } catch (err) {
       console.error(err);
-      setMessage("Error creating product.");
+      setMessage(err.message || "Error creating product.");
+      setUploading(false);
     }
   };
 
@@ -83,10 +146,9 @@ export default function SellItem() {
         />
 
         <input
-          name="image_url"
-          placeholder="Image URL"
-          value={form.image_url}
-          onChange={handleChange}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
         />
 
         <input
@@ -96,7 +158,9 @@ export default function SellItem() {
           onChange={handleChange}
         />
 
-        <button type="submit">Post Product</button>
+        <button type="submit" disabled={uploading}>
+          {uploading ? "Uploading image..." : "Post Product"}
+        </button>
       </form>
 
       {message && <p>{message}</p>}

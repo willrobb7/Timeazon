@@ -146,7 +146,21 @@ export class CdkStack extends Stack {
         ignorePublicAcls: true,
         blockPublicPolicy: false,
         restrictPublicBuckets: false
-      })
+      }),
+      cors: [
+        {
+          // for training, keep it simple – allow everything
+          allowedOrigins: ["*"],
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.HEAD
+          ],
+          allowedHeaders: ["*"],
+          exposedHeaders: [],
+          maxAge: 3000
+        }
+      ]
     })
 
     const clientBucket = new s3.Bucket(this, 'client-bucket', {
@@ -347,6 +361,19 @@ export class CdkStack extends Stack {
     cartTable.grantReadWriteData(getToCartLambda)
     cartTable.grantReadWriteData(deleteFromCartLambda)
 
+    // S3 lambda images 
+    // New Lambda to create pre signed upload urls
+    const getImageUploadUrlLambda = new lambda.Function(this, 'get-image-upload-url-lambda', {
+      functionName: `${props.subDomain}-get-image-upload-url-lambda`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'utility-functions.getImageUploadUrlHandler',
+      code: lambda.Code.fromAsset('functions'),
+      environment: lambdaEnvVars
+    })
+
+    // Allow it to upload objects to the static images bucket
+    staticImagesBucket.grantPut(getImageUploadUrlLambda)
+
     // ----------------------------------
     // API Gateway
     // ----------------------------------
@@ -398,6 +425,11 @@ export class CdkStack extends Stack {
     addToCartApi.addMethod("GET", new apigw.LambdaIntegration(getToCartLambda));
     addToCartApi.addMethod("POST", new apigw.LambdaIntegration(postToCartLambda));
     addToCartApi.addMethod("DELETE", new apigw.LambdaIntegration(deleteFromCartLambda));
+
+    // POST /image-upload-url
+    const imageUploadUrlApi = api.root.addResource('image-upload-url')
+    imageUploadUrlApi.addMethod('POST', new apigw.LambdaIntegration(getImageUploadUrlLambda))
+
     // ----------------------------------
     // CloudFront distributions
     // ----------------------------------

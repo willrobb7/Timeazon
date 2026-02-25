@@ -1,5 +1,10 @@
 // functions/utility-functions.js
 import { runQuery, bootstrapDatabase } from './db.js';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+
+const s3 = new S3Client({})
+
 
 // Small helper to keep responses consistent
 function jsonResponse(statusCode, payload) {
@@ -32,6 +37,58 @@ const logInvocationDetails = (event, context) => {
     });
   }
 };
+
+// -------------------------
+// S3 HANDLER 
+// -------------------------
+
+export const getImageUploadUrlHandler = async (event) => {
+  try {
+    const body = JSON.parse(event.body || "{}")
+    const { fileName, fileType } = body
+
+    if (!fileName || !fileType) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "fileName and fileType are required" })
+      }
+    }
+
+    const bucketName = process.env.STATIC_IMAGES_BUCKET
+    const baseUrl = process.env.STATIC_IMAGES_BASE_URL
+
+    const safeName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, "_")
+    const key = safeName
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      ContentType: fileType
+    })
+
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 })
+
+    const finalUrl = `${baseUrl}/${key}`
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type"
+      },
+      body: JSON.stringify({
+        uploadUrl,
+        finalUrl,
+        key
+      })
+    }
+  } catch (err) {
+    console.error(err)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: "Could not create upload url" })
+    }
+  }
+}
 
 // -------------------------
 // BOOTSTRAP HANDLER (optional)
