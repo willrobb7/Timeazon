@@ -1,3 +1,20 @@
+.shop-title {
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-top: 50px;
+
+  color: #ffffff;
+  -webkit-text-stroke: 2px #000;
+
+  text-shadow:
+    0 0 12px rgba(0, 255, 255, 0.8),
+    0 0 24px rgba(255, 0, 200, 0.6);
+}
+
+
 .product-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

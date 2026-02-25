@@ -1,3 +1,4 @@
+import "./EraSelect.css";
 export default function EraSelect ({eras, selected, onChange}) {
 
     return (
