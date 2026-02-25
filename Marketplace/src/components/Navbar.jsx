@@ -10,12 +10,12 @@ const Navbar = () => {
       <div className="backend-status-wrapper">
     <BackendStatus />
     </div>
-      <NavLink to="/time-portal">
+      <NavLink to="/Homepage">
         <img src="/timeazon.png" alt="Website Logo" className="logo" />
       </NavLink>
 
       <ul>
-        <li><NavLink to="/time-portal">Homepage</NavLink></li>
+        <li><NavLink to="/Homepage">Homepage</NavLink></li>
         <li><NavLink to="/product">Shop</NavLink></li>
         <li><NavLink to="/sell">Sell</NavLink></li>
         <li><NavLink to ="/contact-us">Contact Us</NavLink></li>
