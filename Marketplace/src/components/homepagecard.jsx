@@ -8,4 +8,3 @@ export default function HomePageCard(props) {
   );
 }
 
-// For the team
