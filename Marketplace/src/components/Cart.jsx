@@ -117,11 +117,13 @@ export default function Cart() {
 
 // simple product card for the cart
 function CartProductCard({ product, addedAt, onRemove }) {
-  const imageSrc = `/${product.image_url}`;
+
+  const s3domain = "https://timeazon-static-images.s3.eu-west-2.amazonaws.com";
+  const imageUrl = `${s3domain}/${product.image_url}`;
 
   return (
     <div className="cart-product-card">
-      <img src={imageSrc} alt={product.name} className="cart-product-image" />
+      <img src={imageUrl} alt={product.name} className="cart-product-image" />
       <div className="cart-product-info">
         <h3>{product.name}</h3>
         <br></br>
