@@ -1,3 +1,28 @@
+.sell-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2.5rem 3rem;
+  background: linear-gradient(135deg, #1b1f3a, #0d0f1c);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 191, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  color:#f1feff
+}
+
+.sell-container::before {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(0,191,255,0.35), transparent 70%);
+  filter: blur(120px);
+  top: -100px;
+  left: -100px;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .sellTitle {
     font-size: 4rem;
     color:aqua;

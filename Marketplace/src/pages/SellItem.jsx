@@ -118,8 +118,9 @@ export default function SellItem() {
   };
 
   return (
-    <div className="sellItem">
-      <h2 className="sellTitle">Sell an Item</h2>
+    <div className="sell-container">
+    <div class="sellItem">
+      <h2 class="sellTitle">Sell an artifact</h2>
 
       <form className="addItemForm" onSubmit={handleSubmit}>
         <input
@@ -172,6 +173,7 @@ export default function SellItem() {
       </form>
 
       {message && <p>{message}</p>}
+    </div>
     </div>
   );
 }
