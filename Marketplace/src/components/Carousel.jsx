@@ -23,7 +23,7 @@ const imageUrl4 = `${s3domain}/temporalStabiliser.jpg`;
 const imageUrl5 = `${s3domain}/almanac.jpg`;
 const imageUrl6 = `${s3domain}/playfry5.jpg`;
 const imageUrl7 = `${s3domain}/magnaCarta.png`;
-const imageUrl8 = `${s3domain}/MedievalFireStratingKit.png`;
+const imageUrl8 = `${s3domain}/MedievalFireStartingKit.png`;
 const imageUrl9 = `${s3domain}/watch.jpg`;
 
   return (
