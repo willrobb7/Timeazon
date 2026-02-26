@@ -54,7 +54,7 @@ export default function ProductPage({ products }) {
 
   return (
     <div className="productPageElements">
-      <BackButton className="productPageBackButton" />
+      
 
       <div className="pageImage">
         <img src={imageUrl} className="productPageImage" alt={product.title} />
@@ -73,6 +73,7 @@ export default function ProductPage({ products }) {
           {added ? "Added to Cart" : "Add to Cart"}
         </button>
       </div>
+      <BackButton className="productPageBackButton" />
     </div>
   );
 }
