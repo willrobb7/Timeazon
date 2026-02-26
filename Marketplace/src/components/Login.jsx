@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Login.css";
 import { Link, useNavigate } from "react-router-dom";
+import { setSessionEmail } from "../sessionUser";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
 
     try {
       const response = await fetch(
@@ -32,13 +34,18 @@ const Login = () => {
         throw new Error(data.message || "Login failed");
       }
 
+      // remember the user for this browser tab
+      setSessionEmail(email);
       setMessage("Login successful!");
 
-      // Optional: redirect after login
+      // let the rest of the app know auth + cart may have changed
+      window.dispatchEvent(new Event("authChanged"));
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      // redirect after login
       setTimeout(() => {
         navigate("/time-portal");
-      }, 1000);
-
+      }, 800);
     } catch (error) {
       setMessage(error.message);
     }
@@ -83,7 +90,7 @@ const Login = () => {
 
         <div className="signup-link">
           <p>
-            Don't have an account?{" "}
+            Do not have an account?{" "}
             <Link className="signup" to="/signup">
               Sign Up
             </Link>
