@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 const PasswordReset = () => {
   return (
+    <div className='password-container'>
       <div className="password-page">
         <form action="">
           <h1>Reset Your Password</h1>
@@ -21,6 +22,7 @@ const PasswordReset = () => {
           </div>
           
         </form>
+</div>
 </div>
 );
 };

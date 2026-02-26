@@ -42,6 +42,7 @@ const Signup = () => {
   };
 
   return (
+    <div className="signup-container">
     <div className="signup-page">
       <form onSubmit={handleSubmit}>
         <h1>Create An Account</h1>
@@ -80,7 +81,7 @@ const Signup = () => {
           Confirm
         </button>
 
-        {message && <p>{message}</p>}
+        {message && <p className="accountconfirm">{message}</p>}
 
         <div className="forgot-password">
           <Link className="password" to="/PasswordReset">
@@ -97,6 +98,7 @@ const Signup = () => {
           </p>
         </div>
       </form>
+    </div>
     </div>
   );
 };

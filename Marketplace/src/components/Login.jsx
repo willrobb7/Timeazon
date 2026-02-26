@@ -52,6 +52,7 @@ const Login = () => {
   };
 
   return (
+    <div className="login-container">
     <div className="login-page">
       <form onSubmit={handleSubmit}>
         <h1>Initialize Access</h1>
@@ -97,6 +98,7 @@ const Login = () => {
           </p>
         </div>
       </form>
+    </div>
     </div>
   );
 };
