@@ -1,3 +1,6 @@
+Miro Board - https://miro.com/app/board/uXjVGJVfWeo=/
+Kanban board - https://corecomtechacademy.atlassian.net/jira/software/c/projects/MP/boards/613?assignee=unassigned
+
 
 # Colour Palette
 - #000000
