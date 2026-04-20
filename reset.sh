@@ -24,6 +24,4 @@ rm -rf node_modules
 npm install
 npm run build
 
-echo
-echo "=== Moving back to CDK for synth and deploy ==="
-cd CDK
+echo "DONE - now you're ready to deploy"

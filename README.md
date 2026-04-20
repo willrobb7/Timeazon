@@ -1,131 +1,180 @@
-Miro Board - https://miro.com/app/board/uXjVGJVfWeo=/
-Kanban board - https://corecomtechacademy.atlassian.net/jira/software/c/projects/MP/boards/613?assignee=unassigned
+# marketplace-project
 
+## Project Overview
 
-# Colour Palette
+TimeAzon is an e-commerce marketplace where users from different time periods can buy and sell products.
+
+---
+
+## Tech Stack
+
+- React (Vite)
+- AWS CDK
+- Lambda
+- API Gateway
+- Aurora PostgreSQL
+- CloudFront + S3
+
+---
+
+## Project Links
+
+- Miro board: https://miro.com/app/board/uXjVGJVfWeo=/
+- Jira board: https://corecomtechacademy.atlassian.net/jira/software/c/projects/MP/boards/613
+
+---
+
+## Colour Palette
+
 - #000000
 - #112134
 - #0869C2
 - #25f0ff
 - #f1feff
 
-# 🚀 TIMEAZON MARKETPLACE
+---
 
-We are TimeAzon. An E-commerce marketplace designed for users from all periods in time to buy and sell products.
+## Setup
 
-📸 Preview
-<!-- Add screenshots or a demo GIF here -->
+1. Set your stack name (required)
 
-Live Demo: https://your-live-url.com
+Add this to your `~/.zshrc` or `~/.bashrc`:
 
-# 🛠️ Built With
+```bash
+export GROUP_PROJECT_STACK_NAME=timeazon
+```
 
-⚡ Vite
+Then reload your profile:
 
-⚛️ React
+```bash
+source ~/.zshrc
+# or
+source ~/.bashrc
+```
 
-🎨 CSS 
+2. Log in to AWS
 
-📦 npm 
+Make sure you are authenticated with the correct profile.
 
-# 📦 Installation
+---
 
-Clone the repository:
+## Reset project
 
-You can clone the repository by following these steps:
+From the root of the project run:
 
-Go to the GitHub repository
+```bash
+./reset.sh
+```
 
-Locate the Code button above the list of files and click it
+This will:
+- remove `node_modules`
+- reinstall dependencies
+- rebuild the client app
 
-Select if you prefer to clone using HTTPS, SSH, or GitHub CLI and click the copy button to copy the URL to your clipboard
+---
 
-Open Git Bash or Terminal
+## Clean up AWS (important)
 
-Change the current working directory to the one where you want the cloned directory
+Before deploying, go to CloudWatch → Log groups in eu-west-2.
 
-In your IDE Terminal, type the following command to clone my repository:
-git clone https://github.com/YOUR_USERNAME/marketplace-project.git
+Delete any log groups that contain:
 
-Press Enter to create your local clone.
+timeazon
 
+Lambda log groups are not deleted with the stack and can cause redeploy issues if names clash.
 
-## Install Dependencies:
+Only delete log groups related to this project.
 
-npm install
+---
 
-# 🚀 Running The App
+## Deploy
 
-Start the development server:
+Navigate to the CDK directory:
 
-npm run dev
+```bash
+cd cdk
+```
 
+Preview the infrastructure:
 
-The app will be available at:
+```bash
+npx cdk synth
+```
 
-http://localhost:5173
+Deploy the stack:
 
-# 🏗️ Building For Production
+```bash
+npx cdk deploy
+```
+
+---
+
+## Seed the database
+
+After deployment:
+
+1. Go to AWS Lambda
+2. Find the function: timeazon-bootstrap
+3. Run a test invocation
+
+This will populate the database with initial data.
+
+---
+
+## Access the app
+
+https://timeazon.cta-training.academy
+
+---
+
+## Common Issues
+
+### CDK deploy fails with ROLLBACK_COMPLETE
+- Go to CloudFormation
+- Delete the failed stack
+- Re-run deploy
+
+---
+
+### Aurora version error
+If you see:
+Cannot find version X for aurora-postgresql
+
+Use:
+```js
+rds.AuroraPostgresEngineVersion.VER_15_14
+```
+
+---
+
+### Docker / bundling errors
+- Make sure Docker Desktop is running
+- Restart Docker if needed
+
+---
+
+### AWS not authenticated
+Run:
+```bash
+aws sts get-caller-identity
+```
+
+If it fails, log in again.
+
+---
+
+### Changes not showing
+Rebuild and redeploy:
+```bash
 npm run build
+```
 
+---
 
-Preview the production build:
+## How this system works
 
-npm run preview
-
-# 📁 Project Structure
-Marketplace/
-│
-├── public/            # Static assets
-├── src/
-│   ├── assets/        # Images, fonts, etc.
-│   ├── components/    # Reusable components
-│   ├── pages/         # Page components
-│   ├── hooks/         # Custom hooks
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── index.html
-├── package.json
-└── vite.config.js
-
-# 🔧 Environment Variables
-
-Create a .env file in the root directory:
-
-VITE_API_URL=https://api.example.com
-
-
-Note: All environment variables must start with VITE_ to be exposed to the client.
-
-# 🧪 Running Tests (Optional)
-
-If using a testing library:
-
-npm run test
-
-# 🚀 Deployment
-
-Build the project:
-
-npm run build
-
-# 🤝 Contributing
-
-Fork the repository
-
-Create your feature branch (git checkout -b feature/AmazingFeature)
-
-Commit your changes (git commit -m 'Add AmazingFeature')
-
-Push to the branch (git push origin feature/AmazingFeature)
-
-Open a Pull Request
-
-# 👤 Author
-
-Alisha Hussain, Adam Standerwick-Shaw, Colin Henderson, Darshan Dave, Jaz Syed
-
-GitHub: @your-username
-
-LinkedIn: Your LinkedIn Profile
+1. React app is built locally
+2. CDK deploys infrastructure
+3. Lambda handles backend logic
+4. Bootstrap Lambda seeds the database
+5. CloudFront serves the frontend

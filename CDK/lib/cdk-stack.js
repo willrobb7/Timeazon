@@ -64,7 +64,7 @@ export class CdkStack extends Stack {
     // ----------------------------------
 
     // Choose the Aurora Postgres engine version
-    const postgresVersion = rds.AuroraPostgresEngineVersion.VER_13_20;
+    const postgresVersion = rds.AuroraPostgresEngineVersion.VER_15_14;
 
     const postgresEngine = rds.DatabaseClusterEngine.auroraPostgres({
       version: postgresVersion,
