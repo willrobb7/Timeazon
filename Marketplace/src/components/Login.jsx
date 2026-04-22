@@ -15,7 +15,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        "https://timeazon.cta-training.academy/api/login",
+        `/api/login`,
         {
           method: "POST",
           headers: {

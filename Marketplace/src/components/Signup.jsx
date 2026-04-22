@@ -13,7 +13,7 @@ const Signup = () => {
 
     try {
       const response = await fetch(
-        "https://timeazon.cta-training.academy/api/users",
+        `/api/users`,
         {
           method: "POST",
           headers: {
