@@ -178,3 +178,116 @@ npm run build
 3. Lambda handles backend logic
 4. Bootstrap Lambda seeds the database
 5. CloudFront serves the frontend
+
+
+
+---
+
+# marketplace-project
+
+## Project Overview
+
+TimeAzon is an e-commerce marketplace where users from different time periods can buy and sell products.
+
+This project now follows a more realistic platform engineering approach, including environment separation, security hardening, and controlled access.
+
+---
+
+## Tech Stack
+
+- React (Vite)
+- AWS CDK
+- Lambda
+- API Gateway
+- Aurora PostgreSQL
+- CloudFront + S3
+- AWS WAF (dev protection)
+
+---
+
+## Environments
+
+This project now supports:
+
+- dev (restricted access via IP)
+- prod (public)
+
+Environments are deployed independently, not overwritten.
+
+---
+
+## Setup
+
+### 1. Set your stack name
+
+export GROUP_PROJECT_STACK_NAME=timeazon
+
+### 2. Choose environment
+
+export APP_ENV=dev   # or prod
+
+---
+
+## Deploy
+
+cd cdk
+npx cdk synth
+npx cdk deploy
+
+---
+
+## Environment Behaviour
+
+Dev:
+https://timeazon-dev.cta-training.academy
+
+Prod:
+https://timeazon.cta-training.academy
+
+---
+
+## Architecture Overview
+
+Frontend:
+- Built with Vite
+- Hosted in S3
+- Served via CloudFront
+
+Backend:
+- API Gateway + Lambda
+- Aurora PostgreSQL
+- DynamoDB
+
+Security:
+- S3 not public
+- CloudFront access only
+- WAF protects dev (IP allow list)
+
+---
+
+## Seed database
+
+Run bootstrap lambda after deploy
+
+---
+
+## Common Issues
+
+403 on dev:
+- IP not whitelisted
+
+Unexpected token <:
+- rebuild frontend
+
+Images not loading:
+- check env vars
+
+---
+
+## Key Learning Points
+
+- Environment separation
+- Infrastructure as Code
+- Edge security
+- Private S3 access
+- Env aware frontend/backend
