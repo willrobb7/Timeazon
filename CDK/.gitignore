@@ -5,3 +5,4 @@ package-lock.json
 .cdk.staging
 cdk.out
 cdk.context.json
+.env

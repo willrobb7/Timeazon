@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timeazon-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timeazon-api
+  template:
+    metadata:
+      labels:
+        app: timeazon-api
+    spec:
+      containers:
+        - name: timeazon-api
+          image: 827602716979.dkr.ecr.eu-west-2.amazonaws.com/timeazon-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: AWS_REGION
+              value: eu-west-2
+            - name: AWS_DEFAULT_REGION
+              value: eu-west-2
+            - name: DB_NAME
+              value: dev
+            - name: CLUSTER_ARN
+              valueFrom:
+                secretKeyRef:
+                  name: timeazon-api-secrets
+                  key: CLUSTER_ARN
+            - name: SECRET_ARN
+              valueFrom:
+                secretKeyRef:
+                  name: timeazon-api-secrets
+                  key: SECRET_ARN
+            - name: DYNAMO_TABLE_NAME
+              value: timeazon-dev-users
+            - name: DYNAMO_REGION
+              value: eu-west-2
+            - name: CART_TABLE_NAME
+              value: timeazon-dev-cart
+            - name: STATIC_IMAGES_BUCKET
+              value: timeazon-dev-static-images
+            - name: STATIC_IMAGES_BASE_URL
+              value: https://static-images-timeazon-dev.cta-training.academy
